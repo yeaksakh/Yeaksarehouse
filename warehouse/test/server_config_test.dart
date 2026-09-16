@@ -24,6 +24,13 @@ Future<void> pumpLogin(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// Opens the picker and switches it to free-form entry.
+Future<void> openCustomField(WidgetTester tester) async {
+  await tapLogo(tester, 3);
+  await tester.tap(find.text('Other'));
+  await tester.pumpAndSettle();
+}
+
 /// Taps the sign-in logo [times] in a row, staying inside the tap window.
 Future<void> tapLogo(WidgetTester tester, int times) async {
   final logo = find.byKey(LoginScreen.logoKey);
@@ -120,6 +127,33 @@ void main() {
       expect(config.baseUrl, 'https://yeaksa.com');
     });
 
+    test('the preset list leads with the default', () {
+      expect(ServerConfig.presets.first.url, ServerConfig.defaultUrl);
+      expect(
+        ServerConfig.presets.map((p) => p.url),
+        containsAll(['https://yeaksa.com', 'https://mekhea.com']),
+      );
+    });
+
+    test('isPreset knows the listed shops from anything else', () {
+      expect(ServerConfig.isPreset('https://mekhea.com'), isTrue);
+      expect(ServerConfig.isPreset('https://staging.yeaksa.com'), isFalse);
+    });
+
+    test('a preset can be chosen and survives a restart', () async {
+      final config = ServerConfig(store: LocalStore());
+
+      final problem = await config.setBaseUrl('https://mekhea.com');
+
+      expect(problem, isNull);
+      expect(config.baseUrl, 'https://mekhea.com');
+      expect(config.isDefault, isFalse);
+
+      final restored = ServerConfig(store: LocalStore());
+      await Future<void>.delayed(Duration.zero);
+      expect(restored.baseUrl, 'https://mekhea.com');
+    });
+
     test('a debug build may be repointed', () {
       // The whole switcher, and the tests below it, depend on this. Guarded so
       // that if `canOverride` is ever tightened, the reason the other tests
@@ -148,20 +182,44 @@ void main() {
       expect(find.text('Server'), findsNothing);
     });
 
-    testWidgets('three taps open it on the current server', (tester) async {
+    testWidgets('three taps list the shops, on the current one',
+        (tester) async {
       await pumpLogin(tester);
 
       await tapLogo(tester, 3);
 
       expect(find.text('Server'), findsOneWidget);
+      expect(find.text('Yeaksa'), findsOneWidget);
+      expect(find.text('Mekhea'), findsOneWidget);
+    });
+
+    testWidgets('choosing the other shop points the app at it', (tester) async {
+      await pumpLogin(tester);
+      await tapLogo(tester, 3);
+
+      await tester.tap(find.text('Mekhea'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Server'), findsNothing);
+      expect(find.text('https://mekhea.com'), findsWidgets);
+    });
+
+    testWidgets('"Other" reveals a field seeded with the live server',
+        (tester) async {
+      await pumpLogin(tester);
+
+      await openCustomField(tester);
+
       expect(
           find.widgetWithText(TextField, 'https://yeaksa.com'), findsOneWidget);
     });
 
-    testWidgets('saving a new address shows it on the sign-in screen',
+    testWidgets('saving a typed address shows it on the sign-in screen',
         (tester) async {
       await pumpLogin(tester);
-      await tapLogo(tester, 3);
+      await openCustomField(tester);
 
       await tester.enterText(
         find.widgetWithText(TextField, 'https://yeaksa.com'),
@@ -171,12 +229,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Server'), findsNothing);
-      expect(find.text('https://staging.yeaksa.com'), findsOneWidget);
+      expect(find.text('https://staging.yeaksa.com'), findsWidgets);
     });
 
     testWidgets('a bad address is rejected without closing', (tester) async {
       await pumpLogin(tester);
-      await tapLogo(tester, 3);
+      await openCustomField(tester);
 
       await tester.enterText(
         find.widgetWithText(TextField, 'https://yeaksa.com'),
@@ -189,24 +247,25 @@ void main() {
       expect(find.textContaining('Enter a full address'), findsOneWidget);
     });
 
-    testWidgets('use default puts https://yeaksa.com back', (tester) async {
+    testWidgets('picking Yeaksa again puts the default back', (tester) async {
       await pumpLogin(tester);
-      await tapLogo(tester, 3);
-
+      await openCustomField(tester);
       await tester.enterText(
         find.widgetWithText(TextField, 'https://yeaksa.com'),
         'staging.yeaksa.com',
       );
-      await tester.tap(find.text('Use default'));
+
+      await tester.tap(find.text('Yeaksa'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, 'Save'));
       await tester.pumpAndSettle();
 
-      expect(
-          find.widgetWithText(TextField, 'https://yeaksa.com'), findsOneWidget);
+      expect(find.text('https://staging.yeaksa.com'), findsNothing);
     });
 
     testWidgets('cancelling leaves the server unchanged', (tester) async {
       await pumpLogin(tester);
-      await tapLogo(tester, 3);
+      await openCustomField(tester);
 
       await tester.enterText(
         find.widgetWithText(TextField, 'https://yeaksa.com'),

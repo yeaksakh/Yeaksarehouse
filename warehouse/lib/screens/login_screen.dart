@@ -54,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
   /// picker, so testers can point a build at staging or an on-site server
   /// without a settings screen staff might wander into.
   void _onLogoTap() {
-    // Nothing to reveal in a release build: the server is fixed there, so
+    // Nothing to reveal when this build has only one server it may use, so
     // opening a picker that cannot save would read as broken.
     if (!ServerConfig.canOverride) return;
 
@@ -240,7 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-/// Edits the server address. Pops the saved URL, or null if nothing changed.
+/// Picks the server. Pops the saved URL, or null if nothing changed.
 class _ServerDialog extends StatefulWidget {
   const _ServerDialog();
 
@@ -249,9 +249,21 @@ class _ServerDialog extends StatefulWidget {
 }
 
 class _ServerDialogState extends State<_ServerDialog> {
-  late final TextEditingController _url =
-      TextEditingController(text: context.read<ServerConfig>().baseUrl);
+  /// The preset that is ticked, or null while a typed address is in play.
+  String? _choice;
+
+  late final TextEditingController _url;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    final current = context.read<ServerConfig>().baseUrl;
+    _choice = ServerConfig.isPreset(current) ? current : null;
+    // Seeded with the live address either way, so choosing "Other" starts from
+    // something that already works rather than an empty field.
+    _url = TextEditingController(text: current);
+  }
 
   @override
   void dispose() {
@@ -259,9 +271,18 @@ class _ServerDialogState extends State<_ServerDialog> {
     super.dispose();
   }
 
+  /// Null selects "Other" and hands the choice to the text field.
+  void _select(String? url) {
+    setState(() {
+      _choice = url;
+      _error = null;
+      if (url != null) _url.text = url;
+    });
+  }
+
   Future<void> _save() async {
     final config = context.read<ServerConfig>();
-    final problem = await config.setBaseUrl(_url.text);
+    final problem = await config.setBaseUrl(_choice ?? _url.text);
     if (!mounted) return;
     if (problem != null) {
       setState(() => _error = problem);
@@ -276,37 +297,62 @@ class _ServerDialogState extends State<_ServerDialog> {
 
     return AlertDialog(
       title: const Text('Server'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            controller: _url,
-            autofocus: true,
-            keyboardType: TextInputType.url,
-            autocorrect: false,
-            textCapitalization: TextCapitalization.none,
-            onSubmitted: (_) => _save(),
-            decoration: InputDecoration(
-              labelText: 'Server address',
-              errorText: _error,
-              prefixIcon: const Icon(Icons.dns_outlined),
-            ),
+      // maxFinite, not a fixed width: the rows want the dialog's full width,
+      // and a hard number would overflow the narrowest handsets.
+      content: SizedBox(
+        width: double.maxFinite,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final preset in ServerConfig.presets)
+                _ServerTile(
+                  title: preset.name,
+                  subtitle: preset.url == ServerConfig.defaultUrl
+                      ? '${preset.url}  \u00b7  Default'
+                      : preset.url,
+                  selected: _choice == preset.url,
+                  onTap: () => _select(preset.url),
+                ),
+              // Free-form entry is a development tool; a release build offers
+              // the shops above and nothing else. See ServerConfig.
+              if (ServerConfig.canEnterCustomHost) ...[
+                _ServerTile(
+                  title: 'Other',
+                  selected: _choice == null,
+                  onTap: () => _select(null),
+                ),
+                if (_choice == null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: TextField(
+                      controller: _url,
+                      autofocus: true,
+                      keyboardType: TextInputType.url,
+                      autocorrect: false,
+                      textCapitalization: TextCapitalization.none,
+                      onSubmitted: (_) => _save(),
+                      decoration: InputDecoration(
+                        labelText: 'Server address',
+                        errorText: _error,
+                        prefixIcon: const Icon(Icons.dns_outlined),
+                      ),
+                    ),
+                  ),
+              ],
+              // A preset can still be refused (a release build that no longer
+              // lists it), and there is no field to hang the reason on.
+              if (_error != null && _choice != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _error!,
+                  style: TextStyle(fontSize: 12, color: scheme.error),
+                ),
+              ],
+            ],
           ),
-          const SizedBox(height: 4),
-          TextButton.icon(
-            onPressed: () => setState(() {
-              _url.text = ServerConfig.defaultUrl;
-              _error = null;
-            }),
-            icon: const Icon(Icons.restart_alt, size: 18),
-            label: const Text('Use default'),
-          ),
-          Text(
-            'Default is ${ServerConfig.defaultUrl}',
-            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-          ),
-        ],
+        ),
       ),
       actions: [
         TextButton(
@@ -315,6 +361,43 @@ class _ServerDialogState extends State<_ServerDialog> {
         ),
         TextButton(onPressed: _save, child: const Text('Save')),
       ],
+    );
+  }
+}
+
+/// One row of the picker. A tick rather than a radio: `Radio.groupValue` is
+/// deprecated on this Flutter, and the list is short enough that a check mark
+/// reads the same.
+class _ServerTile extends StatelessWidget {
+  const _ServerTile({
+    required this.title,
+    this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String title;
+  final String? subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return ListTile(
+      onTap: onTap,
+      selected: selected,
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+      subtitle: subtitle == null
+          ? null
+          : Text(subtitle!, style: const TextStyle(fontSize: 12)),
+      trailing: Icon(
+        selected ? Icons.check_circle : Icons.circle_outlined,
+        color: selected ? scheme.primary : scheme.outlineVariant,
+      ),
     );
   }
 }

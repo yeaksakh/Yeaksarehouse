@@ -2,6 +2,9 @@ import 'package:flutter/foundation.dart' show ChangeNotifier, kReleaseMode;
 
 import '../data/local_store.dart';
 
+/// A server the app is allowed to point at by name, with no address typed.
+typedef ServerChoice = ({String name, String url});
+
 /// Which server the app signs in to.
 ///
 /// Staff never see this. It exists so one build can be pointed at staging or at
@@ -17,6 +20,13 @@ class ServerConfig extends ChangeNotifier {
   /// Where a fresh install points.
   static const defaultUrl = 'https://yeaksa.com';
 
+  /// The shops this build knows about, in the order the picker lists
+  /// them. The first is the default.
+  static const presets = <ServerChoice>[
+    (name: 'Yeaksa', url: defaultUrl),
+    (name: 'Mekhea', url: 'https://mekhea.com'),
+  ];
+
   /// Optional. Without a store the choice lives only for this run.
   final LocalStore? _store;
 
@@ -25,23 +35,35 @@ class ServerConfig extends ChangeNotifier {
   String get baseUrl => _baseUrl;
   bool get isDefault => _baseUrl == defaultUrl;
 
-  /// True when this build may be pointed somewhere else at all.
+  /// True when [url] is one of the [presets].
+  static bool isPreset(String url) => presets.any((p) => p.url == url);
+
+  /// True when this build accepts an address nobody vetted.
   ///
-  /// The switcher is a development tool. A SHIPPED app that can be repointed at
-  /// an arbitrary host -- and remembers it across restarts -- is both a support
-  /// call nobody can diagnose from the outside and a way to feed a staff
-  /// member's password to a host the shop does not control.
-  static bool get canOverride => !kReleaseMode;
+  /// Free-form entry is a development tool. A SHIPPED app that can be
+  /// repointed at an ARBITRARY host -- and remembers it across restarts -- is
+  /// both a support call nobody can diagnose from the outside and a way to
+  /// feed a staff member's password to a host the shop does not control.
+  ///
+  /// The [presets] are exempt and stay available in a release build: each one
+  /// is a host the shop itself runs, so choosing between them sends a staff
+  /// member's credentials nowhere they were not already going.
+  static bool get canEnterCustomHost => !kReleaseMode;
+
+  /// True when the picker has anything to offer at all.
+  static bool get canOverride => presets.length > 1 || canEnterCustomHost;
 
   /// Stores [value] for this and future launches.
   ///
   /// Returns null when accepted, or the reason it was rejected so the caller
   /// can show it against the field.
   Future<String?> setBaseUrl(String value) async {
-    if (!canOverride) return null;
     final cleaned = normalise(value);
     if (cleaned == null) {
       return 'Enter a full address, e.g. $defaultUrl';
+    }
+    if (!isPreset(cleaned) && !canEnterCustomHost) {
+      return 'This build can only use the servers listed above.';
     }
     if (cleaned == _baseUrl) return null;
     _baseUrl = cleaned;
@@ -79,19 +101,19 @@ class ServerConfig extends ChangeNotifier {
   }
 
   /// Bring back the previously chosen server. A stored value that no longer
-  /// parses is ignored rather than stranding the app on a broken address.
+  /// parses is dropped rather than stranding the app on a broken address.
   Future<void> _restore() async {
-    if (!canOverride) {
-      // CLEARED, not merely ignored: upgrading a handset from a debug build to
-      // a release one must not leave it quietly pointing at a test box.
-      _baseUrl = defaultUrl;
-      await _store?.clearServerUrl();
-      return;
-    }
     final saved = await _store?.loadServerUrl();
     if (saved == null) return;
     final cleaned = normalise(saved);
-    if (cleaned == null || cleaned == _baseUrl) return;
+    // A release build keeps only the presets. CLEARED, not merely ignored:
+    // upgrading a handset from a debug build to a release one must not leave
+    // it quietly pointing at a test box.
+    if (cleaned == null || (!isPreset(cleaned) && !canEnterCustomHost)) {
+      await _store?.clearServerUrl();
+      return;
+    }
+    if (cleaned == _baseUrl) return;
     _baseUrl = cleaned;
     notifyListeners();
   }
