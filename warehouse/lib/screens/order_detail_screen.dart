@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
@@ -132,6 +134,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final tasks = context.watch<TasksController>();
     final staff = context.watch<SessionController>().staff;
     final order = tasks.orderById(widget.orderId);
@@ -141,7 +144,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     if (order == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const Center(child: Text('That shipment is no longer here.')),
+        body: Center(child: Text(l10n.shipmentNoLongerHere)),
       );
     }
 
@@ -199,8 +202,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   const SizedBox(height: 8),
                   _Row(
                     icon: Icons.inventory_2_outlined,
-                    label: 'Packed'
-                        '${order.packedByName.isEmpty ? '' : ' by ${order.packedByName}'}'
+                    label: '${order.packedByName.isEmpty ? l10n.stagePacked : l10n.packedByName(order.packedByName)}'
                         ' · ${dateTime(order.packedAt!)}',
                   ),
                 ],
@@ -208,8 +210,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   const SizedBox(height: 8),
                   _Row(
                     icon: Icons.fact_check_outlined,
-                    label: 'Audited'
-                        '${order.auditedByName.isEmpty ? '' : ' by ${order.auditedByName}'}'
+                    label: '${order.auditedByName.isEmpty ? l10n.stageAudited : l10n.auditedByName(order.auditedByName)}'
                         ' · ${dateTime(order.auditedAt!)}',
                   ),
                 ],
@@ -239,7 +240,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             _Banner(
               icon: Icons.assignment_ind_outlined,
               color: colors.ordered,
-              title: 'Not accepted yet',
+              title: l10n.notAcceptedYet,
               message: 'Accept it to start packing. The website shows you as '
                   'the one preparing it.',
             ),
@@ -253,7 +254,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               color: scheme.onSurfaceVariant,
               title: 'Being packed by ${order.preparedBy!.name}',
               message:
-                  'Only the person who accepted a shipment ticks its items.',
+                  l10n.onlyAccepterTicks,
             ),
           ],
           if (order.isCashOnDelivery) ...[
@@ -261,18 +262,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             _Banner(
               icon: Icons.payments,
               color: colors.prepared,
-              title: 'Collect on delivery',
+              title: l10n.collectOnDelivery,
               message:
-                  'Put the invoice in the box. The rider collects at the door.',
+                  l10n.collectOnDeliveryBody,
             ),
           ],
           const SizedBox(height: 20),
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Items',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                  l10n.items,
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                 ),
               ),
               Text(
@@ -291,12 +292,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             // scanner needs the box tapped once; it keeps focus after each scan.
             ScanField(
               onScan: _handleScan,
-              hintText: 'Scan or type a SKU',
+              hintText: l10n.scanOrTypeSku,
               autofocus: false,
             ),
             const SizedBox(height: 6),
             Text(
-              'Tap an item to tick it, or scan its SKU.',
+              l10n.tapAnItemToTick,
               style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
             ),
           ],
@@ -319,9 +320,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           ],
           if (order.photos.isNotEmpty) ...[
             const SizedBox(height: 10),
-            const Text(
-              'Photos',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            Text(
+              l10n.photos,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 10),
             Wrap(
@@ -353,7 +354,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         const SizedBox(height: 4),
                         // Which step it is evidence for, and when it went up.
                         Text(
-                          photo.stage?.label ?? 'Photo',
+                          photo.stage?.label ?? l10n.photo,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -386,10 +387,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.print_outlined),
-            label: Text(_printing ? 'Preparing labels...' : 'Print box labels'),
+            label: Text(_printing ? l10n.preparingLabels : l10n.printBoxLabels),
           ),
           const SizedBox(height: 10),
-          ..._actions(order, staff: staff, mine: mine, waiting: waiting),
+          ..._actions(order,
+              l10n: l10n, staff: staff, mine: mine, waiting: waiting),
         ],
       ),
     );
@@ -403,6 +405,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   /// PDF and reaches Wi-Fi and USB printers, and offers "Save as PDF" for a
   /// packer with no printer at hand.
   Future<void> _printLabels(Order order) async {
+    final l10n = AppLocalizations.of(context);
     final choice = await showModalBottomSheet<_PrintRoute>(
       context: context,
       builder: (sheet) => SafeArea(
@@ -411,19 +414,19 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.bluetooth),
-              title: const Text('Bluetooth label printer'),
-              subtitle: const Text('The warehouse sticker printer'),
+              title: Text(l10n.bluetoothLabelPrinter),
+              subtitle: Text(l10n.theWarehouseStickerPrinter),
               onTap: () => Navigator.of(sheet).pop(_PrintRoute.bluetooth),
             ),
             ListTile(
               leading: const Icon(Icons.print_outlined),
-              title: const Text('Other printer, or save as PDF'),
-              subtitle: const Text('Wi-Fi, USB, or keep a copy'),
+              title: Text(l10n.otherPrinterOrPdf),
+              subtitle: Text(l10n.wifiUsbOrKeepCopy),
               onTap: () => Navigator.of(sheet).pop(_PrintRoute.system),
             ),
             ListTile(
               leading: const Icon(Icons.settings_outlined),
-              title: const Text('Choose the label printer'),
+              title: Text(l10n.chooseTheLabelPrinter),
               onTap: () => Navigator.of(sheet).pop(_PrintRoute.settings),
             ),
           ],
@@ -464,13 +467,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   /// six, carrying on sends three more into a machine that cannot print them
   /// and the packer has no idea which ones are missing.
   Future<void> _printViaBluetooth(Order order) async {
+    final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _printing = true);
     try {
       final sheet = await context.read<TasksController>().labelData(order.id);
       if (sheet.isEmpty) {
-        messenger.showSnackBar(const SnackBar(
-            content: Text('This shipment has nothing to label.')));
+        messenger.showSnackBar(
+            SnackBar(content: Text(l10n.nothingToLabel)));
         return;
       }
       var sent = 0;
@@ -500,6 +504,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   List<Widget> _actions(
     Order order, {
+    required AppLocalizations l10n,
     required Staff? staff,
     required bool mine,
     required bool waiting,
@@ -522,7 +527,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     done: 'You are packing ${order.code}.',
                   ),
           icon: const Icon(Icons.assignment_ind),
-          label: const Text('Accept to pack'),
+          label: Text(l10n.acceptToPack),
         ),
       ];
     }
@@ -538,7 +543,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     close: true,
                   ),
           icon: const Icon(Icons.inventory_2),
-          label: const Text('Mark packed'),
+          label: Text(l10n.markPacked),
         ),
         if (!order.isFullyPacked && order.hasDetail) ...[
           const SizedBox(height: 8),
@@ -561,7 +566,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       close: true,
                     ),
             icon: const Icon(Icons.undo),
-            label: const Text('Hand back'),
+            label: Text(l10n.handBack),
           ),
         ],
       ];
@@ -581,7 +586,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       close: true,
                     ),
             icon: const Icon(Icons.fact_check),
-            label: const Text('Mark audited'),
+            label: Text(l10n.markAudited),
           ),
         ];
       }
@@ -589,7 +594,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         _Banner(
           icon: Icons.lock_outline,
           color: scheme.onSurfaceVariant,
-          title: 'Waiting for audit',
+          title: l10n.waitingForAudit,
           message: 'A supervisor checks the packed shipment before the rider '
               'takes it.',
         ),
@@ -601,8 +606,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         _Banner(
           icon: Icons.local_shipping,
           color: colors.checked,
-          title: 'Waiting for the rider',
-          message: 'The rider marks it picked up from the rider app.',
+          title: l10n.waitingForRider,
+          message: l10n.waitingForRiderBody,
         ),
       ];
     }
@@ -612,7 +617,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         icon: Icons.done_all,
         color: colors.forStage(stage),
         title: stage.label,
-        message: 'This shipment has left the warehouse.',
+        message: l10n.shipmentHasLeft,
       ),
     ];
   }

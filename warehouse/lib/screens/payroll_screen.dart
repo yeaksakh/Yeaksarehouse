@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../models/hrm.dart';
@@ -31,6 +33,7 @@ class _PayrollScreenState extends State<PayrollScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final hrm = context.watch<HrmController>();
     final symbol =
         context.watch<SessionController>().staff?.currencySymbol ?? r'$';
@@ -40,7 +43,7 @@ class _PayrollScreenState extends State<PayrollScreen> {
     final latest = payrolls.isEmpty ? null : payrolls.first;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Payroll')),
+      appBar: AppBar(title: Text(l10n.payroll)),
       body: RefreshIndicator(
         onRefresh: () => context.read<HrmController>().loadPayrolls(),
         child: ListView(

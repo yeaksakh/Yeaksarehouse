@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../models/fulfilment_stage.dart';
@@ -165,7 +167,7 @@ class _Queue extends StatelessWidget {
                       // A tab that never loaded is a failure to say out loud,
                       // not an empty queue: "Nothing to pack" would be a lie.
                       final failed = !tasks.hasLoaded(stage);
-                      final copy = emptyQueueCopy(stage);
+                      final copy = emptyQueueCopy(stage, AppLocalizations.of(context));
                       return EmptyState(
                         icon: failed ? Icons.cloud_off : copy.icon,
                         title: failed ? 'Could not load shipments' : copy.title,

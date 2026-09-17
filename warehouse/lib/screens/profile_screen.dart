@@ -177,11 +177,19 @@ class ProfileScreen extends StatelessWidget {
                 // A segmented control rather than a toggle: a packer handed a
                 // phone in the wrong language needs to SEE which one they are
                 // picking, and "ភាសាខ្មែរ" is legible whichever is active.
+                // Stacked, not side by side: "ភាសាខ្មែរ" beside "English" beside
+                // a label overflows a small phone by about 40px. Full width for
+                // the control, label above it.
                 Row(
                   children: [
                     const Icon(Icons.language),
                     const SizedBox(width: 12),
-                    Expanded(child: Text(l10n.language)),
+                    Text(l10n.language),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
                     SegmentedButton<Locale>(
                       segments: [
                         ButtonSegment(

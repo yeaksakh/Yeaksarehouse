@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../models/hrm.dart';
@@ -29,19 +31,20 @@ class _LeaveScreenState extends State<LeaveScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final hrm = context.watch<HrmController>();
     final scheme = Theme.of(context).colorScheme;
     final leaves = hrm.leaves.toList()
       ..sort((a, b) => b.start.compareTo(a.start));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Leave')),
+      appBar: AppBar(title: Text(l10n.leave)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const LeaveRequestScreen()),
         ),
         icon: const Icon(Icons.add),
-        label: const Text('Request leave'),
+        label: Text(l10n.requestLeave),
       ),
       body: RefreshIndicator(
         onRefresh: () => context.read<HrmController>().loadLeaves(),
@@ -55,11 +58,11 @@ class _LeaveScreenState extends State<LeaveScreen> {
                 child: Text(hrm.error!, style: TextStyle(color: scheme.error)),
               ),
             if (leaves.isEmpty)
-              const SizedBox(
+              SizedBox(
                 height: 300,
                 child: EmptyState(
                   icon: Icons.event_busy,
-                  title: 'No leave requests',
+                  title: l10n.noLeaveRequests,
                   message: 'Ask for leave with the button below. A manager '
                       'approves it on the website or in this app.',
                 ),

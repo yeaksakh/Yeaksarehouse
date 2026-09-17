@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
+
 import '../models/fulfilment_stage.dart';
 import '../models/order.dart';
 import '../theme/app_theme.dart';
@@ -28,6 +30,7 @@ class OrderTaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
     final ordered = order.stage == FulfilmentStage.ordered;
@@ -117,31 +120,31 @@ class OrderTaskCard extends StatelessWidget {
               if (ordered && !order.isAccepted)
                 _Tag(
                   icon: Icons.assignment_ind_outlined,
-                  label: 'Not accepted',
+                  label: l10n.notAccepted,
                   color: colors.ordered,
                 )
               else if (ordered && order.isAcceptedBy(staffId))
                 _Tag(
                   icon: Icons.person,
-                  label: 'Yours',
+                  label: l10n.yours,
                   color: colors.checked,
                 )
               else if (order.isAccepted)
                 _Tag(
                   icon: Icons.person_outline,
-                  label: 'With ${order.preparedBy!.name}',
+                  label: l10n.withStaff(order.preparedBy!.name),
                   color: scheme.onSurfaceVariant,
                 ),
               if (order.isCashOnDelivery)
                 _Tag(
                   icon: Icons.payments_outlined,
-                  label: 'Collect cash',
+                  label: l10n.collectCash,
                   color: colors.prepared,
                 ),
               if (order.note.isNotEmpty)
                 _Tag(
                   icon: Icons.sticky_note_2_outlined,
-                  label: 'Has a note',
+                  label: l10n.hasANote,
                   color: scheme.onSurfaceVariant,
                 ),
             ],
@@ -216,26 +219,27 @@ class _Tag extends StatelessWidget {
 /// caught up, which is worth saying rather than showing a generic shrug.
 ({IconData icon, String title, String message}) emptyQueueCopy(
   FulfilmentStage stage,
+  AppLocalizations l10n,
 ) =>
     switch (stage) {
       FulfilmentStage.ordered => (
           icon: Icons.check_circle_outline,
-          title: 'Nothing to pack',
-          message: 'New orders land here. Accept one to start packing it.',
+          title: l10n.nothingToPack,
+          message: l10n.newOrdersLandHere,
         ),
       FulfilmentStage.packed => (
           icon: Icons.fact_check_outlined,
-          title: 'Nothing waiting for audit',
-          message: 'Packed shipments wait here until a supervisor checks them.',
+          title: l10n.nothingWaitingForAudit,
+          message: l10n.packedWaitForSupervisor,
         ),
       FulfilmentStage.audited => (
           icon: Icons.local_shipping_outlined,
-          title: 'Nothing waiting for a rider',
-          message: 'Audited shipments sit here until the rider picks them up.',
+          title: l10n.nothingWaitingForRider,
+          message: l10n.auditedWaitForRider,
         ),
       _ => (
           icon: Icons.inbox_outlined,
-          title: 'Nothing here',
-          message: 'No shipments at this status.',
+          title: l10n.nothingHereTitle,
+          message: l10n.noShipmentsAtStatus,
         ),
     };

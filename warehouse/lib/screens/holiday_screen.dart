@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../state/hrm_controller.dart';
@@ -31,6 +33,7 @@ class _HolidayScreenState extends State<HolidayScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final hrm = context.watch<HrmController>();
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
@@ -43,7 +46,7 @@ class _HolidayScreenState extends State<HolidayScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Holidays'),
+        title: Text(l10n.holidays),
         actions: [
           DropdownButtonHideUnderline(
             child: DropdownButton<int>(
@@ -74,16 +77,16 @@ class _HolidayScreenState extends State<HolidayScreen> {
                 child: Text(hrm.error!, style: TextStyle(color: scheme.error)),
               ),
             if (holidays.isEmpty)
-              const SizedBox(
+              SizedBox(
                 height: 300,
                 child: EmptyState(
                   icon: Icons.beach_access,
-                  title: 'No holidays',
-                  message: 'None are set for this year on the website.',
+                  title: l10n.noHolidays,
+                  message: l10n.noHolidaysSet,
                 ),
               ),
             if (upcoming.isNotEmpty) ...[
-              const _Heading('Coming up'),
+              _Heading(l10n.comingUp),
               for (final holiday in upcoming) ...[
                 SectionCard(
                   child: Row(
@@ -135,7 +138,7 @@ class _HolidayScreenState extends State<HolidayScreen> {
               ],
             ],
             if (past.isNotEmpty) ...[
-              const _Heading('Already passed'),
+              _Heading(l10n.alreadyPassed),
               for (final holiday in past) ...[
                 SectionCard(
                   padding:

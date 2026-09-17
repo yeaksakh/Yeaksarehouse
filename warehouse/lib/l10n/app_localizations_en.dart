@@ -288,4 +288,416 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inUse => 'In use';
+
+  @override
+  String get yours => 'Yours';
+
+  @override
+  String get nothingHereTitle => 'Nothing here';
+
+  @override
+  String get nothingToPack => 'Nothing to pack';
+
+  @override
+  String get nothingWaitingForAudit => 'Nothing waiting for audit';
+
+  @override
+  String get nothingWaitingForRider => 'Nothing waiting for a rider';
+
+  @override
+  String get noShipmentsAtStatus => 'No shipments at this status.';
+
+  @override
+  String get newOrdersLandHere =>
+      'New orders land here. Accept one to start packing it.';
+
+  @override
+  String get packedWaitForSupervisor =>
+      'Packed shipments wait here until a supervisor checks them.';
+
+  @override
+  String get auditedWaitForRider =>
+      'Audited shipments sit here until the rider picks them up.';
+
+  @override
+  String get photo => 'Photo';
+
+  @override
+  String get photos => 'Photos';
+
+  @override
+  String get handBack => 'Hand back';
+
+  @override
+  String get notAcceptedYet => 'Not accepted yet';
+
+  @override
+  String get waitingForAudit => 'Waiting for audit';
+
+  @override
+  String get acceptItToStartPacking =>
+      'Accept it to start packing. The website shows you as the packer.';
+
+  @override
+  String get supervisorChecksFirst =>
+      'A supervisor checks the packed shipment before the rider takes it.';
+
+  @override
+  String get onlyAccepterTicks =>
+      'Only the person who accepted a shipment ticks its items.';
+
+  @override
+  String get tapAnItemToTick => 'Tap an item to tick it, or scan its SKU.';
+
+  @override
+  String get scanOrTypeSku => 'Scan or type a SKU';
+
+  @override
+  String get shipmentNoLongerHere => 'That shipment is no longer here.';
+
+  @override
+  String get shipmentHasLeft => 'This shipment has left the warehouse.';
+
+  @override
+  String packedByName(String name) {
+    return 'Packed by $name';
+  }
+
+  @override
+  String auditedByName(String name) {
+    return 'Audited by $name';
+  }
+
+  @override
+  String get products => 'Products';
+
+  @override
+  String get stockCount => 'Stock count';
+
+  @override
+  String get noStockYet => 'No stock yet';
+
+  @override
+  String get productsAppearHere =>
+      'Products appear here once the catalogue loads.';
+
+  @override
+  String get nothingMatches => 'Nothing matches';
+
+  @override
+  String get tryDifferentSearch => 'Try a different name, SKU or bin.';
+
+  @override
+  String get searchNameSkuBin => 'Search name, SKU or bin';
+
+  @override
+  String get scanAProduct => 'Scan a product';
+
+  @override
+  String get scan => 'Scan';
+
+  @override
+  String get closeScanner => 'Close scanner';
+
+  @override
+  String get onHand => 'On hand';
+
+  @override
+  String get reserved => 'Reserved';
+
+  @override
+  String get freeToSell => 'Free to sell';
+
+  @override
+  String get adjust => 'Adjust';
+
+  @override
+  String get saveAdjustment => 'Save adjustment';
+
+  @override
+  String get noChange => 'No change';
+
+  @override
+  String get recordWhatChanged =>
+      'Record what changed, not what the total became.';
+
+  @override
+  String get neverCounted => 'Never counted';
+
+  @override
+  String get noBinAssigned => 'No bin assigned';
+
+  @override
+  String get noBarcodeOnFile => 'No barcode on file';
+
+  @override
+  String get productNoLongerListed => 'That product is no longer listed.';
+
+  @override
+  String get roleCannotChangeStock =>
+      'Your role can view stock but not change it.';
+
+  @override
+  String get countLines => 'Lines counted';
+
+  @override
+  String get startCount => 'Start a count';
+
+  @override
+  String get finishCount => 'Finish count';
+
+  @override
+  String get discardCount => 'Discard count';
+
+  @override
+  String get counted => 'Counted';
+
+  @override
+  String get expected => 'Expected';
+
+  @override
+  String get difference => 'Difference';
+
+  @override
+  String get attendance => 'Attendance';
+
+  @override
+  String get leave => 'Leave';
+
+  @override
+  String get holidays => 'Holidays';
+
+  @override
+  String get leaveApprovals => 'Leave approvals';
+
+  @override
+  String get payroll => 'Payroll';
+
+  @override
+  String get yourClockInsAndHours => 'Your clock-ins and hours';
+
+  @override
+  String get yourRequestsAndAsk => 'Your requests, and ask for leave';
+
+  @override
+  String get shopDaysOff => 'The shop\'s days off this year';
+
+  @override
+  String get approveOrReject => 'Approve or reject staff requests';
+
+  @override
+  String get yourPayslips => 'Your payslips';
+
+  @override
+  String get clockedIn => 'Clocked in';
+
+  @override
+  String get notClockedIn => 'Not clocked in';
+
+  @override
+  String get tapWhenYouStart => 'Tap the button when you start.';
+
+  @override
+  String get clockIn => 'Clock in';
+
+  @override
+  String get clockOut => 'Clock out';
+
+  @override
+  String get startShiftNow => 'Start your shift now?';
+
+  @override
+  String get endShiftNow => 'End your shift now?';
+
+  @override
+  String get noteOptional => 'Note (optional)';
+
+  @override
+  String get addAPhoto => 'Add a photo';
+
+  @override
+  String get retakePhoto => 'Retake photo';
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get thisWeek => 'This week';
+
+  @override
+  String get thisMonth => 'This month';
+
+  @override
+  String get daysWorked => 'Days worked';
+
+  @override
+  String get hours => 'Hours';
+
+  @override
+  String get openShift => 'Open';
+
+  @override
+  String get noShiftsHere => 'No shifts here';
+
+  @override
+  String get clockInFromHrm =>
+      'Clock in from the HRM tab and it will show here.';
+
+  @override
+  String get positionRecorded => 'Position recorded';
+
+  @override
+  String get requestLeave => 'Request leave';
+
+  @override
+  String get sendRequest => 'Send request';
+
+  @override
+  String get kindOfLeave => 'Kind of leave';
+
+  @override
+  String get chooseKindOfLeave => 'Choose the kind of leave.';
+
+  @override
+  String get fromDate => 'From';
+
+  @override
+  String get toDate => 'To';
+
+  @override
+  String get halfDay => 'Half day';
+
+  @override
+  String get halfADay => 'Half a day';
+
+  @override
+  String get reason => 'Reason';
+
+  @override
+  String get leaveRequested => 'Leave requested — waiting for approval.';
+
+  @override
+  String get noLeaveRequests => 'No leave requests';
+
+  @override
+  String get askForLeaveBelow =>
+      'Ask for leave with the button below. A manager approves it.';
+
+  @override
+  String get approve => 'Approve';
+
+  @override
+  String get reject => 'Reject';
+
+  @override
+  String get request => 'Request';
+
+  @override
+  String get backToPending => 'Back to pending';
+
+  @override
+  String get noRequestsMatch => 'No leave requests match this filter.';
+
+  @override
+  String get couldNotBeChanged => 'That could not be changed.';
+
+  @override
+  String get statusPending => 'Pending';
+
+  @override
+  String get statusApproved => 'Approved';
+
+  @override
+  String get statusRejected => 'Rejected';
+
+  @override
+  String get statusCancelled => 'Cancelled';
+
+  @override
+  String get comingUp => 'Coming up';
+
+  @override
+  String get alreadyPassed => 'Already passed';
+
+  @override
+  String get noHolidays => 'No holidays';
+
+  @override
+  String get noHolidaysSet => 'None are set for this year on the website.';
+
+  @override
+  String get noCountOpen => 'No count open';
+
+  @override
+  String get startOneWalkShelves =>
+      'Start one, walk the shelves, and submit when you are done.';
+
+  @override
+  String get countedLabel => 'Counted';
+
+  @override
+  String get notCountedYet => 'Not counted yet';
+
+  @override
+  String get onlyUncounted => 'Only uncounted';
+
+  @override
+  String get everyLineCounted => 'Every line counted';
+
+  @override
+  String get leftToCount => 'Left';
+
+  @override
+  String get variance => 'Variance';
+
+  @override
+  String get matches => 'Matches';
+
+  @override
+  String get nothingLowOrOut => 'Nothing low or out';
+
+  @override
+  String get scanAShelfItem => 'Scan a shelf item';
+
+  @override
+  String get submit => 'Submit';
+
+  @override
+  String get submitWhenReady => 'Submit when you are ready.';
+
+  @override
+  String get countSomethingFirst => 'Count something to submit';
+
+  @override
+  String get submitThisCount => 'Submit this count?';
+
+  @override
+  String get countedLinesOverwrite => 'Counted lines overwrite the shelf.';
+
+  @override
+  String get discardCountQ => 'Discard this count?';
+
+  @override
+  String get everythingThrownAway =>
+      'Everything counted so far is thrown away. The shelf is untouched.';
+
+  @override
+  String get keepCounting => 'Keep counting';
+
+  @override
+  String get keepIt => 'Keep it';
+
+  @override
+  String get discard => 'Discard';
+
+  @override
+  String get clear => 'Clear';
+
+  @override
+  String get countKeptOnDevice =>
+      'A count in progress is kept on this device, so it survives a restart.';
+
+  @override
+  String get serverUnreadable =>
+      'The server sent something the app could not read.';
 }

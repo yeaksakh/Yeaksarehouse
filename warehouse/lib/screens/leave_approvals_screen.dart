@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../models/hrm.dart';
@@ -28,6 +30,7 @@ class _LeaveApprovalsScreenState extends State<LeaveApprovalsScreen> {
   }
 
   Future<void> _decide(LeaveRequest leave) async {
+    final l10n = AppLocalizations.of(context);
     final status = await showModalBottomSheet<LeaveStatus>(
       context: context,
       builder: (sheet) => SafeArea(
@@ -36,7 +39,7 @@ class _LeaveApprovalsScreenState extends State<LeaveApprovalsScreen> {
           children: [
             ListTile(
               title: Text(
-                '${leave.userName.isEmpty ? 'Request' : leave.userName} · '
+                '${leave.userName.isEmpty ? l10n.request : leave.userName} · '
                 '${leave.typeLabel}',
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
@@ -46,18 +49,18 @@ class _LeaveApprovalsScreenState extends State<LeaveApprovalsScreen> {
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.check_circle, color: Color(0xFF1B7F4C)),
-              title: const Text('Approve'),
+              title: Text(l10n.approve),
               onTap: () => Navigator.of(sheet).pop(LeaveStatus.approved),
             ),
             ListTile(
               leading: const Icon(Icons.cancel, color: Color(0xFFB3261E)),
-              title: const Text('Reject'),
+              title: Text(l10n.reject),
               onTap: () => Navigator.of(sheet).pop(LeaveStatus.rejected),
             ),
             if (leave.status != LeaveStatus.pending)
               ListTile(
                 leading: const Icon(Icons.undo),
-                title: const Text('Back to pending'),
+                title: Text(l10n.backToPending),
                 onTap: () => Navigator.of(sheet).pop(LeaveStatus.pending),
               ),
           ],
@@ -72,14 +75,15 @@ class _LeaveApprovalsScreenState extends State<LeaveApprovalsScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
         content: Text(done
-            ? '${leave.userName.isEmpty ? 'Request' : leave.userName}: ${status.label}.'
-            : (hrm.error ?? 'That could not be changed.')),
+            ? '${leave.userName.isEmpty ? l10n.request : leave.userName}: ${status.label}.'
+            : (hrm.error ?? l10n.couldNotBeChanged)),
       ));
     if (!done) hrm.clearError();
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final hrm = context.watch<HrmController>();
     final scheme = Theme.of(context).colorScheme;
     final leaves = hrm.leaves
@@ -88,7 +92,7 @@ class _LeaveApprovalsScreenState extends State<LeaveApprovalsScreen> {
       ..sort((a, b) => b.start.compareTo(a.start));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Leave approvals')),
+      appBar: AppBar(title: Text(l10n.leaveApprovals)),
       body: RefreshIndicator(
         onRefresh: () => context.read<HrmController>().loadLeaves(),
         child: ListView(
@@ -118,12 +122,12 @@ class _LeaveApprovalsScreenState extends State<LeaveApprovalsScreen> {
                 child: Text(hrm.error!, style: TextStyle(color: scheme.error)),
               ),
             if (leaves.isEmpty)
-              const SizedBox(
+              SizedBox(
                 height: 280,
                 child: EmptyState(
                   icon: Icons.inbox_outlined,
-                  title: 'Nothing here',
-                  message: 'No leave requests match this filter.',
+                  title: l10n.nothingHereTitle,
+                  message: l10n.noRequestsMatch,
                 ),
               ),
             for (final leave in leaves) ...[

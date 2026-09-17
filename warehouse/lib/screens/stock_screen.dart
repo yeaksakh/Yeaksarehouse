@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -56,6 +58,7 @@ class _StockScreenState extends State<StockScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final stock = context.watch<StockController>();
     final colors = context.appColors;
     final items = stock.visible;
@@ -63,15 +66,15 @@ class _StockScreenState extends State<StockScreen> {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 20,
-        title: const Text(
-          'Stock',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+        title: Text(
+          l10n.stock,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
         ),
         actions: [
           IconButton(
             onPressed: () => setState(() => _scanning = !_scanning),
             icon: Icon(_scanning ? Icons.close : Icons.qr_code_scanner),
-            tooltip: _scanning ? 'Close scanner' : 'Scan',
+            tooltip: _scanning ? l10n.closeScanner : l10n.scan,
           ),
           // The count lives here rather than on a tab: it is a rare job, and
           // the tab went to HR, which is a daily one.
@@ -84,7 +87,7 @@ class _StockScreenState extends State<StockScreen> {
                   ? Icons.checklist_rtl
                   : Icons.checklist_outlined,
             ),
-            tooltip: 'Stock count',
+            tooltip: l10n.stockCount,
           ),
           const SizedBox(width: 8),
         ],
@@ -100,7 +103,7 @@ class _StockScreenState extends State<StockScreen> {
                   if (_scanning) ...[
                     ScanField(
                       onScan: _handleScan,
-                      hintText: 'Scan a product',
+                      hintText: l10n.scanAProduct,
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -109,7 +112,7 @@ class _StockScreenState extends State<StockScreen> {
                     onChanged: stock.search,
                     textInputAction: TextInputAction.search,
                     decoration: InputDecoration(
-                      hintText: 'Search name, SKU or bin',
+                      hintText: l10n.searchNameSkuBin,
                       prefixIcon: const Icon(Icons.search),
                       suffixIcon: stock.query.isEmpty
                           ? null
@@ -128,7 +131,7 @@ class _StockScreenState extends State<StockScreen> {
                       Expanded(
                         child: StatTile(
                           icon: Icons.category_outlined,
-                          label: 'Products',
+                          label: l10n.products,
                           value: '${stock.all.length}',
                         ),
                       ),
@@ -165,11 +168,11 @@ class _StockScreenState extends State<StockScreen> {
                           child: EmptyState(
                             icon: Icons.search_off,
                             title: stock.query.isEmpty
-                                ? 'No stock yet'
-                                : 'Nothing matches',
+                                ? l10n.noStockYet
+                                : l10n.nothingMatches,
                             message: stock.query.isEmpty
-                                ? 'Products appear here once the catalogue loads.'
-                                : 'Try a different name, SKU or bin.',
+                                ? l10n.productsAppearHere
+                                : l10n.tryDifferentSearch,
                           ),
                         ),
                       ],

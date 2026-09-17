@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -39,6 +41,7 @@ class _HrmScreenState extends State<HrmScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final staff = context.watch<SessionController>().staff;
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
@@ -49,9 +52,9 @@ class _HrmScreenState extends State<HrmScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'HRM',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+            Text(
+              l10n.hrm,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
             ),
             if (staff != null)
               Text(
@@ -73,24 +76,24 @@ class _HrmScreenState extends State<HrmScreen> {
               index: 1,
               icon: Icons.calendar_today,
               color: colors.stock,
-              title: 'Attendance',
-              subtitle: 'Your clock-ins and hours',
+              title: l10n.attendance,
+              subtitle: l10n.yourClockInsAndHours,
               onTap: () => _open(const AttendanceScreen()),
             ),
             _Door(
               index: 2,
               icon: Icons.event_busy,
               color: colors.leave,
-              title: 'Leave',
-              subtitle: 'Your requests, and ask for leave',
+              title: l10n.leave,
+              subtitle: l10n.yourRequestsAndAsk,
               onTap: () => _open(const LeaveScreen()),
             ),
             _Door(
               index: 3,
               icon: Icons.beach_access,
               color: colors.holiday,
-              title: 'Holidays',
-              subtitle: "The shop's days off this year",
+              title: l10n.holidays,
+              subtitle: l10n.shopDaysOff,
               onTap: () => _open(const HolidayScreen()),
             ),
             if (staff?.isAdmin ?? false)
@@ -98,16 +101,16 @@ class _HrmScreenState extends State<HrmScreen> {
                 index: 4,
                 icon: Icons.group,
                 color: colors.hrm,
-                title: 'Leave approvals',
-                subtitle: 'Approve or reject staff requests',
+                title: l10n.leaveApprovals,
+                subtitle: l10n.approveOrReject,
                 onTap: () => _open(const LeaveApprovalsScreen()),
               ),
             _Door(
               index: 5,
               icon: Icons.payments_outlined,
               color: colors.pay,
-              title: 'Payroll',
-              subtitle: 'Your payslips',
+              title: l10n.payroll,
+              subtitle: l10n.yourPayslips,
               onTap: () => _open(const PayrollScreen()),
             ),
           ],
@@ -164,6 +167,7 @@ class ClockCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final hrm = context.watch<HrmController>();
     final colors = context.appColors;
     final shift = hrm.openShift;
@@ -203,8 +207,8 @@ class ClockCard extends StatelessWidget {
                       !hrm.shiftLoaded
                           ? 'Checking…'
                           : clockedIn
-                              ? 'Clocked in'
-                              : 'Not clocked in',
+                              ? l10n.clockedIn
+                              : l10n.notClockedIn,
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
@@ -214,7 +218,7 @@ class ClockCard extends StatelessWidget {
                     Text(
                       shift == null
                           ? (hrm.shiftLoaded
-                              ? 'Tap the button when you start.'
+                              ? l10n.tapWhenYouStart
                               : ' ')
                           : 'Since ${dateTime(shift.clockIn)} · '
                               '${hoursMinutes(shift.worked)}',
@@ -245,7 +249,7 @@ class ClockCard extends StatelessWidget {
             ),
             icon: Icon(clockedIn ? Icons.logout : Icons.login),
             label: Text(
-              clockedIn ? 'Clock out' : 'Clock in',
+              clockedIn ? l10n.clockOut : l10n.clockIn,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
           ),
@@ -285,8 +289,9 @@ class _PunchDialogState extends State<_PunchDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final verb = widget.clockingIn ? 'Clock in' : 'Clock out';
+    final verb = widget.clockingIn ? l10n.clockIn : l10n.clockOut;
     return AlertDialog(
       title: Text(verb),
       content: Column(
@@ -294,16 +299,16 @@ class _PunchDialogState extends State<_PunchDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            widget.clockingIn ? 'Start your shift now?' : 'End your shift now?',
+            widget.clockingIn ? l10n.startShiftNow : l10n.endShiftNow,
             style: TextStyle(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 14),
           TextField(
             controller: _note,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              labelText: 'Note (optional)',
-              prefixIcon: Icon(Icons.sticky_note_2_outlined),
+            decoration: InputDecoration(
+              labelText: l10n.noteOptional,
+              prefixIcon: const Icon(Icons.sticky_note_2_outlined),
             ),
           ),
           const SizedBox(height: 10),
@@ -323,14 +328,14 @@ class _PunchDialogState extends State<_PunchDialog> {
               if (path != null && mounted) setState(() => _photoPath = path);
             },
             icon: const Icon(Icons.photo_camera_outlined),
-            label: Text(_photoPath == null ? 'Add a photo' : 'Retake photo'),
+            label: Text(_photoPath == null ? l10n.addAPhoto : l10n.retakePhoto),
           ),
         ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(

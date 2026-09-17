@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../models/hrm.dart';
@@ -52,6 +54,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final hrm = context.watch<HrmController>();
     final entries = hrm.history;
     final scheme = Theme.of(context).colorScheme;
@@ -62,7 +65,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         .length;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Attendance')),
+      appBar: AppBar(title: Text(l10n.attendance)),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -75,9 +78,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 for (final range in _Range.values)
                   ChoiceChip(
                     label: Text(switch (range) {
-                      _Range.today => 'Today',
-                      _Range.week => 'This week',
-                      _Range.month => 'This month',
+                      _Range.today => l10n.today,
+                      _Range.week => l10n.thisWeek,
+                      _Range.month => l10n.thisMonth,
                     }),
                     selected: _range == range,
                     onSelected: (_) {
@@ -93,7 +96,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 Expanded(
                   child: StatTile(
                     icon: Icons.event_available,
-                    label: 'Days worked',
+                    label: l10n.daysWorked,
                     value: '$days',
                   ),
                 ),
@@ -101,7 +104,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 Expanded(
                   child: StatTile(
                     icon: Icons.timer_outlined,
-                    label: 'Hours',
+                    label: l10n.hours,
                     value: hoursMinutes(worked),
                     tone: context.appColors.checked,
                   ),
@@ -115,12 +118,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 child: Text(hrm.error!, style: TextStyle(color: scheme.error)),
               ),
             if (entries.isEmpty)
-              const SizedBox(
+              SizedBox(
                 height: 260,
                 child: EmptyState(
                   icon: Icons.history_toggle_off,
-                  title: 'No shifts here',
-                  message: 'Clock in from the HRM tab and it will show here.',
+                  title: l10n.noShiftsHere,
+                  message: l10n.clockInFromHrm,
                 ),
               ),
             for (final entry in entries) ...[
@@ -145,6 +148,7 @@ class _ShiftCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
     return SectionCard(
@@ -162,7 +166,7 @@ class _ShiftCard extends StatelessWidget {
                 ),
               ),
               Text(
-                entry.isOpen ? 'Open' : hoursMinutes(entry.worked),
+                entry.isOpen ? l10n.openShift : hoursMinutes(entry.worked),
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   color: entry.isOpen ? colors.prepared : colors.checked,
@@ -197,7 +201,7 @@ class _ShiftCard extends StatelessWidget {
           if (entry.inLatitude != null) ...[
             const SizedBox(height: 8),
             Text(
-              'Position recorded',
+              l10n.positionRecorded,
               style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
             ),
           ],

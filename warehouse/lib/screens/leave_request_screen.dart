@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../models/hrm.dart';
@@ -58,11 +60,12 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context);
     final hrm = context.read<HrmController>();
     final type = _type;
     if (type == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Choose the kind of leave.')),
+        SnackBar(content: Text(l10n.chooseKindOfLeave)),
       );
       return;
     }
@@ -90,19 +93,20 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
-            content: Text('Leave requested — waiting for approval.')),
+        SnackBar(
+            content: Text(l10n.leaveRequested)),
       );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final hrm = context.watch<HrmController>();
     final scheme = Theme.of(context).colorScheme;
     final types = hrm.leaveTypes;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Request leave')),
+      appBar: AppBar(title: Text(l10n.requestLeave)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
@@ -118,7 +122,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
             ],
             onChanged: (value) => setState(() => _type = value),
             decoration: InputDecoration(
-              labelText: 'Kind of leave',
+              labelText: l10n.kindOfLeave,
               prefixIcon: const Icon(Icons.category_outlined),
               helperText: types.isEmpty && hrm.error == null
                   ? 'Loading the kinds of leave…'
@@ -130,7 +134,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
             children: [
               Expanded(
                 child: _DateField(
-                  label: 'From',
+                  label: l10n.fromDate,
                   date: _start,
                   onTap: () => _pick(start: true),
                 ),
@@ -147,12 +151,12 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Half day'),
+            title: Text(l10n.halfDay),
             value: _halfDay,
             onChanged: (value) => setState(() => _halfDay = value),
           ),
           Text(
-            _halfDay ? 'Half a day' : '$_days day${_days == 1 ? '' : 's'}',
+            _halfDay ? l10n.halfADay : '$_days day${_days == 1 ? '' : 's'}',
             style:
                 TextStyle(fontWeight: FontWeight.w600, color: scheme.primary),
           ),
@@ -161,8 +165,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
             controller: _reason,
             maxLines: 3,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              labelText: 'Reason',
+            decoration: InputDecoration(
+              labelText: l10n.reason,
               alignLabelWithHint: true,
             ),
           ),
@@ -174,7 +178,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
           ElevatedButton.icon(
             onPressed: hrm.busy ? null : _submit,
             icon: const Icon(Icons.send),
-            label: const Text('Send request'),
+            label: Text(l10n.sendRequest),
           ),
         ],
       ),

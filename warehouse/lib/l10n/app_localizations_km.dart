@@ -286,4 +286,415 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get inUse => 'កំពុងប្រើ';
+
+  @override
+  String get yours => 'របស់អ្នក';
+
+  @override
+  String get nothingHereTitle => 'មិនមានអ្វីទេ';
+
+  @override
+  String get nothingToPack => 'គ្មានអ្វីត្រូវខ្ចប់';
+
+  @override
+  String get nothingWaitingForAudit => 'គ្មានអ្វីរង់ចាំត្រួតពិនិត្យ';
+
+  @override
+  String get nothingWaitingForRider => 'គ្មានអ្វីរង់ចាំអ្នកដឹក';
+
+  @override
+  String get noShipmentsAtStatus => 'គ្មានកម្មង់នៅស្ថានភាពនេះទេ។';
+
+  @override
+  String get newOrdersLandHere =>
+      'កម្មង់ថ្មីមកដល់ទីនេះ។ ទទួលយកមួយដើម្បីចាប់ផ្ដើមខ្ចប់។';
+
+  @override
+  String get packedWaitForSupervisor =>
+      'កម្មង់ដែលខ្ចប់រួចរង់ចាំនៅទីនេះ រហូតដល់អ្នកគ្រប់គ្រងត្រួតពិនិត្យ។';
+
+  @override
+  String get auditedWaitForRider =>
+      'កម្មង់ដែលត្រួតពិនិត្យរួចនៅទីនេះ រហូតដល់អ្នកដឹកមកយក។';
+
+  @override
+  String get photo => 'រូបភាព';
+
+  @override
+  String get photos => 'រូបភាព';
+
+  @override
+  String get handBack => 'ប្រគល់ត្រឡប់';
+
+  @override
+  String get notAcceptedYet => 'មិនទាន់ទទួលយក';
+
+  @override
+  String get waitingForAudit => 'រង់ចាំត្រួតពិនិត្យ';
+
+  @override
+  String get acceptItToStartPacking =>
+      'ទទួលយកដើម្បីចាប់ផ្ដើមខ្ចប់។ គេហទំព័របង្ហាញអ្នកជាអ្នកខ្ចប់។';
+
+  @override
+  String get supervisorChecksFirst =>
+      'អ្នកគ្រប់គ្រងត្រួតពិនិត្យកម្មង់ដែលខ្ចប់រួច មុនអ្នកដឹកយកទៅ។';
+
+  @override
+  String get onlyAccepterTicks =>
+      'មានតែអ្នកដែលបានទទួលយកកម្មង់ទេ ដែលអាចធីកទំនិញរបស់វា។';
+
+  @override
+  String get tapAnItemToTick => 'ចុចលើទំនិញដើម្បីធីក ឬស្កេន SKU របស់វា។';
+
+  @override
+  String get scanOrTypeSku => 'ស្កេន ឬវាយ SKU';
+
+  @override
+  String get shipmentNoLongerHere => 'កម្មង់នោះលែងមាននៅទីនេះទៀតហើយ។';
+
+  @override
+  String get shipmentHasLeft => 'កម្មង់នេះបានចេញពីឃ្លាំងហើយ។';
+
+  @override
+  String packedByName(String name) {
+    return 'ខ្ចប់ដោយ $name';
+  }
+
+  @override
+  String auditedByName(String name) {
+    return 'ត្រួតពិនិត្យដោយ $name';
+  }
+
+  @override
+  String get products => 'ផលិតផល';
+
+  @override
+  String get stockCount => 'រាប់ស្តុក';
+
+  @override
+  String get noStockYet => 'មិនទាន់មានស្តុក';
+
+  @override
+  String get productsAppearHere =>
+      'ផលិតផលនឹងបង្ហាញនៅទីនេះ ពេលបញ្ជីទំនិញផ្ទុករួច។';
+
+  @override
+  String get nothingMatches => 'រកមិនឃើញ';
+
+  @override
+  String get tryDifferentSearch => 'សូមសាកល្បងឈ្មោះ SKU ឬធ្នើរផ្សេង។';
+
+  @override
+  String get searchNameSkuBin => 'ស្វែងរកឈ្មោះ SKU ឬធ្នើរ';
+
+  @override
+  String get scanAProduct => 'ស្កេនផលិតផល';
+
+  @override
+  String get scan => 'ស្កេន';
+
+  @override
+  String get closeScanner => 'បិទម៉ាស៊ីនស្កេន';
+
+  @override
+  String get onHand => 'មានក្នុងស្តុក';
+
+  @override
+  String get reserved => 'បានកក់';
+
+  @override
+  String get freeToSell => 'អាចលក់បាន';
+
+  @override
+  String get adjust => 'កែតម្រូវ';
+
+  @override
+  String get saveAdjustment => 'រក្សាទុកការកែតម្រូវ';
+
+  @override
+  String get noChange => 'គ្មានការផ្លាស់ប្ដូរ';
+
+  @override
+  String get recordWhatChanged =>
+      'កត់ត្រាអ្វីដែលបានប្ដូរ មិនមែនចំនួនសរុបចុងក្រោយទេ។';
+
+  @override
+  String get neverCounted => 'មិនដែលរាប់';
+
+  @override
+  String get noBinAssigned => 'មិនទាន់កំណត់ធ្នើរ';
+
+  @override
+  String get noBarcodeOnFile => 'គ្មានបាកូដ';
+
+  @override
+  String get productNoLongerListed => 'ផលិតផលនោះលែងមានក្នុងបញ្ជីទៀតហើយ។';
+
+  @override
+  String get roleCannotChangeStock =>
+      'តួនាទីរបស់អ្នកអាចមើលស្តុក តែមិនអាចកែបានទេ។';
+
+  @override
+  String get countLines => 'ជួរបានរាប់';
+
+  @override
+  String get startCount => 'ចាប់ផ្ដើមរាប់';
+
+  @override
+  String get finishCount => 'បញ្ចប់ការរាប់';
+
+  @override
+  String get discardCount => 'បោះបង់ការរាប់';
+
+  @override
+  String get counted => 'រាប់រួច';
+
+  @override
+  String get expected => 'គួរមាន';
+
+  @override
+  String get difference => 'ភាពខុសគ្នា';
+
+  @override
+  String get attendance => 'វត្តមាន';
+
+  @override
+  String get leave => 'ការឈប់សម្រាក';
+
+  @override
+  String get holidays => 'ថ្ងៃឈប់សម្រាក';
+
+  @override
+  String get leaveApprovals => 'អនុម័តការឈប់សម្រាក';
+
+  @override
+  String get payroll => 'បៀវត្សរ៍';
+
+  @override
+  String get yourClockInsAndHours => 'ការចុះវត្តមាន និងម៉ោងធ្វើការរបស់អ្នក';
+
+  @override
+  String get yourRequestsAndAsk => 'សំណើរបស់អ្នក និងស្នើសុំឈប់សម្រាក';
+
+  @override
+  String get shopDaysOff => 'ថ្ងៃឈប់សម្រាករបស់ហាងក្នុងឆ្នាំនេះ';
+
+  @override
+  String get approveOrReject => 'អនុម័ត ឬបដិសេធសំណើបុគ្គលិក';
+
+  @override
+  String get yourPayslips => 'បង្កាន់ដៃប្រាក់ខែរបស់អ្នក';
+
+  @override
+  String get clockedIn => 'បានចុះវត្តមាន';
+
+  @override
+  String get notClockedIn => 'មិនទាន់ចុះវត្តមាន';
+
+  @override
+  String get tapWhenYouStart => 'ចុចប៊ូតុងពេលអ្នកចាប់ផ្ដើម។';
+
+  @override
+  String get clockIn => 'ចុះវត្តមានចូល';
+
+  @override
+  String get clockOut => 'ចុះវត្តមានចេញ';
+
+  @override
+  String get startShiftNow => 'ចាប់ផ្ដើមវេនឥឡូវនេះ?';
+
+  @override
+  String get endShiftNow => 'បញ្ចប់វេនឥឡូវនេះ?';
+
+  @override
+  String get noteOptional => 'កំណត់ចំណាំ (មិនបង្ខំ)';
+
+  @override
+  String get addAPhoto => 'បន្ថែមរូបភាព';
+
+  @override
+  String get retakePhoto => 'ថតរូបម្ដងទៀត';
+
+  @override
+  String get today => 'ថ្ងៃនេះ';
+
+  @override
+  String get thisWeek => 'សប្ដាហ៍នេះ';
+
+  @override
+  String get thisMonth => 'ខែនេះ';
+
+  @override
+  String get daysWorked => 'ថ្ងៃធ្វើការ';
+
+  @override
+  String get hours => 'ម៉ោង';
+
+  @override
+  String get openShift => 'កំពុងបើក';
+
+  @override
+  String get noShiftsHere => 'គ្មានវេននៅទីនេះ';
+
+  @override
+  String get clockInFromHrm =>
+      'ចុះវត្តមានពីផ្ទាំងធនធានមនុស្ស នោះវានឹងបង្ហាញនៅទីនេះ។';
+
+  @override
+  String get positionRecorded => 'បានកត់ត្រាទីតាំង';
+
+  @override
+  String get requestLeave => 'ស្នើសុំឈប់សម្រាក';
+
+  @override
+  String get sendRequest => 'ផ្ញើសំណើ';
+
+  @override
+  String get kindOfLeave => 'ប្រភេទការឈប់សម្រាក';
+
+  @override
+  String get chooseKindOfLeave => 'សូមជ្រើសប្រភេទការឈប់សម្រាក។';
+
+  @override
+  String get fromDate => 'ចាប់ពី';
+
+  @override
+  String get toDate => 'ដល់';
+
+  @override
+  String get halfDay => 'កន្លះថ្ងៃ';
+
+  @override
+  String get halfADay => 'កន្លះថ្ងៃ';
+
+  @override
+  String get reason => 'មូលហេតុ';
+
+  @override
+  String get leaveRequested => 'បានស្នើសុំឈប់សម្រាក — កំពុងរង់ចាំការអនុម័ត។';
+
+  @override
+  String get noLeaveRequests => 'គ្មានសំណើឈប់សម្រាក';
+
+  @override
+  String get askForLeaveBelow =>
+      'ស្នើសុំឈប់សម្រាកដោយប៊ូតុងខាងក្រោម។ អ្នកគ្រប់គ្រងនឹងអនុម័ត។';
+
+  @override
+  String get approve => 'អនុម័ត';
+
+  @override
+  String get reject => 'បដិសេធ';
+
+  @override
+  String get request => 'សំណើ';
+
+  @override
+  String get backToPending => 'ត្រឡប់ទៅរង់ចាំ';
+
+  @override
+  String get noRequestsMatch => 'គ្មានសំណើឈប់សម្រាកត្រូវនឹងតម្រងនេះទេ។';
+
+  @override
+  String get couldNotBeChanged => 'មិនអាចផ្លាស់ប្ដូរបានទេ។';
+
+  @override
+  String get statusPending => 'កំពុងរង់ចាំ';
+
+  @override
+  String get statusApproved => 'បានអនុម័ត';
+
+  @override
+  String get statusRejected => 'បានបដិសេធ';
+
+  @override
+  String get statusCancelled => 'បានលុបចោល';
+
+  @override
+  String get comingUp => 'នឹងមកដល់';
+
+  @override
+  String get alreadyPassed => 'កន្លងផុតហើយ';
+
+  @override
+  String get noHolidays => 'គ្មានថ្ងៃឈប់សម្រាក';
+
+  @override
+  String get noHolidaysSet => 'មិនទាន់កំណត់សម្រាប់ឆ្នាំនេះនៅលើគេហទំព័រទេ។';
+
+  @override
+  String get noCountOpen => 'គ្មានការរាប់កំពុងបើក';
+
+  @override
+  String get startOneWalkShelves =>
+      'ចាប់ផ្ដើមមួយ ដើរតាមធ្នើរ រួចដាក់ស្នើពេលរួចរាល់។';
+
+  @override
+  String get countedLabel => 'រាប់រួច';
+
+  @override
+  String get notCountedYet => 'មិនទាន់រាប់';
+
+  @override
+  String get onlyUncounted => 'តែអ្វីមិនទាន់រាប់';
+
+  @override
+  String get everyLineCounted => 'រាប់គ្រប់ជួរហើយ';
+
+  @override
+  String get leftToCount => 'នៅសល់';
+
+  @override
+  String get variance => 'ភាពខុសគ្នា';
+
+  @override
+  String get matches => 'ត្រូវគ្នា';
+
+  @override
+  String get nothingLowOrOut => 'គ្មានអ្វីខ្វះ ឬអស់';
+
+  @override
+  String get scanAShelfItem => 'ស្កេនទំនិញលើធ្នើរ';
+
+  @override
+  String get submit => 'ដាក់ស្នើ';
+
+  @override
+  String get submitWhenReady => 'ដាក់ស្នើពេលអ្នករួចរាល់។';
+
+  @override
+  String get countSomethingFirst => 'រាប់អ្វីមួយសិនដើម្បីដាក់ស្នើ';
+
+  @override
+  String get submitThisCount => 'ដាក់ស្នើការរាប់នេះ?';
+
+  @override
+  String get countedLinesOverwrite => 'ជួរដែលរាប់រួចនឹងជំនួសចំនួនលើធ្នើរ។';
+
+  @override
+  String get discardCountQ => 'បោះបង់ការរាប់នេះ?';
+
+  @override
+  String get everythingThrownAway =>
+      'អ្វីដែលរាប់រួចទាំងអស់នឹងត្រូវបោះបង់។ ចំនួនលើធ្នើរមិនប៉ះពាល់ទេ។';
+
+  @override
+  String get keepCounting => 'បន្តរាប់';
+
+  @override
+  String get keepIt => 'រក្សាទុក';
+
+  @override
+  String get discard => 'បោះបង់';
+
+  @override
+  String get clear => 'សម្អាត';
+
+  @override
+  String get countKeptOnDevice =>
+      'ការរាប់ដែលកំពុងដំណើរការត្រូវរក្សាក្នុងឧបករណ៍នេះ ដូច្នេះវានៅដដែលបើបើកឡើងវិញ។';
+
+  @override
+  String get serverUnreadable => 'ម៉ាស៊ីនមេបានផ្ញើអ្វីមួយដែលកម្មវិធីអានមិនបាន។';
 }

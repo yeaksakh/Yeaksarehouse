@@ -559,6 +559,792 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'In use'**
   String get inUse;
+
+  /// No description provided for @yours.
+  ///
+  /// In en, this message translates to:
+  /// **'Yours'**
+  String get yours;
+
+  /// No description provided for @nothingHereTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here'**
+  String get nothingHereTitle;
+
+  /// No description provided for @nothingToPack.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to pack'**
+  String get nothingToPack;
+
+  /// No description provided for @nothingWaitingForAudit.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing waiting for audit'**
+  String get nothingWaitingForAudit;
+
+  /// No description provided for @nothingWaitingForRider.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing waiting for a rider'**
+  String get nothingWaitingForRider;
+
+  /// No description provided for @noShipmentsAtStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'No shipments at this status.'**
+  String get noShipmentsAtStatus;
+
+  /// No description provided for @newOrdersLandHere.
+  ///
+  /// In en, this message translates to:
+  /// **'New orders land here. Accept one to start packing it.'**
+  String get newOrdersLandHere;
+
+  /// No description provided for @packedWaitForSupervisor.
+  ///
+  /// In en, this message translates to:
+  /// **'Packed shipments wait here until a supervisor checks them.'**
+  String get packedWaitForSupervisor;
+
+  /// No description provided for @auditedWaitForRider.
+  ///
+  /// In en, this message translates to:
+  /// **'Audited shipments sit here until the rider picks them up.'**
+  String get auditedWaitForRider;
+
+  /// No description provided for @photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get photo;
+
+  /// No description provided for @photos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get photos;
+
+  /// No description provided for @handBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand back'**
+  String get handBack;
+
+  /// No description provided for @notAcceptedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not accepted yet'**
+  String get notAcceptedYet;
+
+  /// No description provided for @waitingForAudit.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for audit'**
+  String get waitingForAudit;
+
+  /// No description provided for @acceptItToStartPacking.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept it to start packing. The website shows you as the packer.'**
+  String get acceptItToStartPacking;
+
+  /// No description provided for @supervisorChecksFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'A supervisor checks the packed shipment before the rider takes it.'**
+  String get supervisorChecksFirst;
+
+  /// No description provided for @onlyAccepterTicks.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the person who accepted a shipment ticks its items.'**
+  String get onlyAccepterTicks;
+
+  /// No description provided for @tapAnItemToTick.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap an item to tick it, or scan its SKU.'**
+  String get tapAnItemToTick;
+
+  /// No description provided for @scanOrTypeSku.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan or type a SKU'**
+  String get scanOrTypeSku;
+
+  /// No description provided for @shipmentNoLongerHere.
+  ///
+  /// In en, this message translates to:
+  /// **'That shipment is no longer here.'**
+  String get shipmentNoLongerHere;
+
+  /// No description provided for @shipmentHasLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'This shipment has left the warehouse.'**
+  String get shipmentHasLeft;
+
+  /// No description provided for @packedByName.
+  ///
+  /// In en, this message translates to:
+  /// **'Packed by {name}'**
+  String packedByName(String name);
+
+  /// No description provided for @auditedByName.
+  ///
+  /// In en, this message translates to:
+  /// **'Audited by {name}'**
+  String auditedByName(String name);
+
+  /// No description provided for @products.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get products;
+
+  /// No description provided for @stockCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock count'**
+  String get stockCount;
+
+  /// No description provided for @noStockYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No stock yet'**
+  String get noStockYet;
+
+  /// No description provided for @productsAppearHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Products appear here once the catalogue loads.'**
+  String get productsAppearHere;
+
+  /// No description provided for @nothingMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing matches'**
+  String get nothingMatches;
+
+  /// No description provided for @tryDifferentSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different name, SKU or bin.'**
+  String get tryDifferentSearch;
+
+  /// No description provided for @searchNameSkuBin.
+  ///
+  /// In en, this message translates to:
+  /// **'Search name, SKU or bin'**
+  String get searchNameSkuBin;
+
+  /// No description provided for @scanAProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a product'**
+  String get scanAProduct;
+
+  /// No description provided for @scan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get scan;
+
+  /// No description provided for @closeScanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Close scanner'**
+  String get closeScanner;
+
+  /// No description provided for @onHand.
+  ///
+  /// In en, this message translates to:
+  /// **'On hand'**
+  String get onHand;
+
+  /// No description provided for @reserved.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserved'**
+  String get reserved;
+
+  /// No description provided for @freeToSell.
+  ///
+  /// In en, this message translates to:
+  /// **'Free to sell'**
+  String get freeToSell;
+
+  /// No description provided for @adjust.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust'**
+  String get adjust;
+
+  /// No description provided for @saveAdjustment.
+  ///
+  /// In en, this message translates to:
+  /// **'Save adjustment'**
+  String get saveAdjustment;
+
+  /// No description provided for @noChange.
+  ///
+  /// In en, this message translates to:
+  /// **'No change'**
+  String get noChange;
+
+  /// No description provided for @recordWhatChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Record what changed, not what the total became.'**
+  String get recordWhatChanged;
+
+  /// No description provided for @neverCounted.
+  ///
+  /// In en, this message translates to:
+  /// **'Never counted'**
+  String get neverCounted;
+
+  /// No description provided for @noBinAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'No bin assigned'**
+  String get noBinAssigned;
+
+  /// No description provided for @noBarcodeOnFile.
+  ///
+  /// In en, this message translates to:
+  /// **'No barcode on file'**
+  String get noBarcodeOnFile;
+
+  /// No description provided for @productNoLongerListed.
+  ///
+  /// In en, this message translates to:
+  /// **'That product is no longer listed.'**
+  String get productNoLongerListed;
+
+  /// No description provided for @roleCannotChangeStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Your role can view stock but not change it.'**
+  String get roleCannotChangeStock;
+
+  /// No description provided for @countLines.
+  ///
+  /// In en, this message translates to:
+  /// **'Lines counted'**
+  String get countLines;
+
+  /// No description provided for @startCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a count'**
+  String get startCount;
+
+  /// No description provided for @finishCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish count'**
+  String get finishCount;
+
+  /// No description provided for @discardCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard count'**
+  String get discardCount;
+
+  /// No description provided for @counted.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted'**
+  String get counted;
+
+  /// No description provided for @expected.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected'**
+  String get expected;
+
+  /// No description provided for @difference.
+  ///
+  /// In en, this message translates to:
+  /// **'Difference'**
+  String get difference;
+
+  /// No description provided for @attendance.
+  ///
+  /// In en, this message translates to:
+  /// **'Attendance'**
+  String get attendance;
+
+  /// No description provided for @leave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get leave;
+
+  /// No description provided for @holidays.
+  ///
+  /// In en, this message translates to:
+  /// **'Holidays'**
+  String get holidays;
+
+  /// No description provided for @leaveApprovals.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave approvals'**
+  String get leaveApprovals;
+
+  /// No description provided for @payroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Payroll'**
+  String get payroll;
+
+  /// No description provided for @yourClockInsAndHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Your clock-ins and hours'**
+  String get yourClockInsAndHours;
+
+  /// No description provided for @yourRequestsAndAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Your requests, and ask for leave'**
+  String get yourRequestsAndAsk;
+
+  /// No description provided for @shopDaysOff.
+  ///
+  /// In en, this message translates to:
+  /// **'The shop\'s days off this year'**
+  String get shopDaysOff;
+
+  /// No description provided for @approveOrReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve or reject staff requests'**
+  String get approveOrReject;
+
+  /// No description provided for @yourPayslips.
+  ///
+  /// In en, this message translates to:
+  /// **'Your payslips'**
+  String get yourPayslips;
+
+  /// No description provided for @clockedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Clocked in'**
+  String get clockedIn;
+
+  /// No description provided for @notClockedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Not clocked in'**
+  String get notClockedIn;
+
+  /// No description provided for @tapWhenYouStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the button when you start.'**
+  String get tapWhenYouStart;
+
+  /// No description provided for @clockIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Clock in'**
+  String get clockIn;
+
+  /// No description provided for @clockOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Clock out'**
+  String get clockOut;
+
+  /// No description provided for @startShiftNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Start your shift now?'**
+  String get startShiftNow;
+
+  /// No description provided for @endShiftNow.
+  ///
+  /// In en, this message translates to:
+  /// **'End your shift now?'**
+  String get endShiftNow;
+
+  /// No description provided for @noteOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get noteOptional;
+
+  /// No description provided for @addAPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo'**
+  String get addAPhoto;
+
+  /// No description provided for @retakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Retake photo'**
+  String get retakePhoto;
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// No description provided for @thisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get thisWeek;
+
+  /// No description provided for @thisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get thisMonth;
+
+  /// No description provided for @daysWorked.
+  ///
+  /// In en, this message translates to:
+  /// **'Days worked'**
+  String get daysWorked;
+
+  /// No description provided for @hours.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours'**
+  String get hours;
+
+  /// No description provided for @openShift.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get openShift;
+
+  /// No description provided for @noShiftsHere.
+  ///
+  /// In en, this message translates to:
+  /// **'No shifts here'**
+  String get noShiftsHere;
+
+  /// No description provided for @clockInFromHrm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clock in from the HRM tab and it will show here.'**
+  String get clockInFromHrm;
+
+  /// No description provided for @positionRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Position recorded'**
+  String get positionRecorded;
+
+  /// No description provided for @requestLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Request leave'**
+  String get requestLeave;
+
+  /// No description provided for @sendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send request'**
+  String get sendRequest;
+
+  /// No description provided for @kindOfLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Kind of leave'**
+  String get kindOfLeave;
+
+  /// No description provided for @chooseKindOfLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the kind of leave.'**
+  String get chooseKindOfLeave;
+
+  /// No description provided for @fromDate.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get fromDate;
+
+  /// No description provided for @toDate.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get toDate;
+
+  /// No description provided for @halfDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Half day'**
+  String get halfDay;
+
+  /// No description provided for @halfADay.
+  ///
+  /// In en, this message translates to:
+  /// **'Half a day'**
+  String get halfADay;
+
+  /// No description provided for @reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get reason;
+
+  /// No description provided for @leaveRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave requested — waiting for approval.'**
+  String get leaveRequested;
+
+  /// No description provided for @noLeaveRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No leave requests'**
+  String get noLeaveRequests;
+
+  /// No description provided for @askForLeaveBelow.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for leave with the button below. A manager approves it.'**
+  String get askForLeaveBelow;
+
+  /// No description provided for @approve.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get approve;
+
+  /// No description provided for @reject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get reject;
+
+  /// No description provided for @request.
+  ///
+  /// In en, this message translates to:
+  /// **'Request'**
+  String get request;
+
+  /// No description provided for @backToPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to pending'**
+  String get backToPending;
+
+  /// No description provided for @noRequestsMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No leave requests match this filter.'**
+  String get noRequestsMatch;
+
+  /// No description provided for @couldNotBeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'That could not be changed.'**
+  String get couldNotBeChanged;
+
+  /// No description provided for @statusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get statusPending;
+
+  /// No description provided for @statusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get statusApproved;
+
+  /// No description provided for @statusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get statusRejected;
+
+  /// No description provided for @statusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get statusCancelled;
+
+  /// No description provided for @comingUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming up'**
+  String get comingUp;
+
+  /// No description provided for @alreadyPassed.
+  ///
+  /// In en, this message translates to:
+  /// **'Already passed'**
+  String get alreadyPassed;
+
+  /// No description provided for @noHolidays.
+  ///
+  /// In en, this message translates to:
+  /// **'No holidays'**
+  String get noHolidays;
+
+  /// No description provided for @noHolidaysSet.
+  ///
+  /// In en, this message translates to:
+  /// **'None are set for this year on the website.'**
+  String get noHolidaysSet;
+
+  /// No description provided for @noCountOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'No count open'**
+  String get noCountOpen;
+
+  /// No description provided for @startOneWalkShelves.
+  ///
+  /// In en, this message translates to:
+  /// **'Start one, walk the shelves, and submit when you are done.'**
+  String get startOneWalkShelves;
+
+  /// No description provided for @countedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted'**
+  String get countedLabel;
+
+  /// No description provided for @notCountedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not counted yet'**
+  String get notCountedYet;
+
+  /// No description provided for @onlyUncounted.
+  ///
+  /// In en, this message translates to:
+  /// **'Only uncounted'**
+  String get onlyUncounted;
+
+  /// No description provided for @everyLineCounted.
+  ///
+  /// In en, this message translates to:
+  /// **'Every line counted'**
+  String get everyLineCounted;
+
+  /// No description provided for @leftToCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Left'**
+  String get leftToCount;
+
+  /// No description provided for @variance.
+  ///
+  /// In en, this message translates to:
+  /// **'Variance'**
+  String get variance;
+
+  /// No description provided for @matches.
+  ///
+  /// In en, this message translates to:
+  /// **'Matches'**
+  String get matches;
+
+  /// No description provided for @nothingLowOrOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing low or out'**
+  String get nothingLowOrOut;
+
+  /// No description provided for @scanAShelfItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a shelf item'**
+  String get scanAShelfItem;
+
+  /// No description provided for @submit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get submit;
+
+  /// No description provided for @submitWhenReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit when you are ready.'**
+  String get submitWhenReady;
+
+  /// No description provided for @countSomethingFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Count something to submit'**
+  String get countSomethingFirst;
+
+  /// No description provided for @submitThisCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit this count?'**
+  String get submitThisCount;
+
+  /// No description provided for @countedLinesOverwrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted lines overwrite the shelf.'**
+  String get countedLinesOverwrite;
+
+  /// No description provided for @discardCountQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard this count?'**
+  String get discardCountQ;
+
+  /// No description provided for @everythingThrownAway.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything counted so far is thrown away. The shelf is untouched.'**
+  String get everythingThrownAway;
+
+  /// No description provided for @keepCounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep counting'**
+  String get keepCounting;
+
+  /// No description provided for @keepIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it'**
+  String get keepIt;
+
+  /// No description provided for @discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
+  /// No description provided for @clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clear;
+
+  /// No description provided for @countKeptOnDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'A count in progress is kept on this device, so it survives a restart.'**
+  String get countKeptOnDevice;
+
+  /// No description provided for @serverUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'The server sent something the app could not read.'**
+  String get serverUnreadable;
 }
 
 class _AppLocalizationsDelegate

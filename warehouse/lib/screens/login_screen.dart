@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../state/server_config.dart';
@@ -84,6 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final session = context.watch<SessionController>();
     final server = context.watch<ServerConfig>();
     final scheme = Theme.of(context).colorScheme;
@@ -141,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Sign in with your yeaksa.com staff account.',
+                      l10n.signInWithStaffAccount,
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.white.withAlpha(215)),
                     ),
@@ -152,9 +155,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       enableSuggestions: false,
                       textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.username],
-                      decoration: const InputDecoration(
-                        labelText: 'Username',
-                        prefixIcon: Icon(Icons.person_outline),
+                      decoration: InputDecoration(
+                        labelText: l10n.username,
+                        prefixIcon: const Icon(Icons.person_outline),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -167,11 +170,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       autofillHints: const [AutofillHints.password],
                       onSubmitted: (_) => _submit(),
                       decoration: InputDecoration(
-                        labelText: 'Password',
+                        labelText: l10n.password,
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           tooltip:
-                              _showPassword ? 'Hide password' : 'Show password',
+                              _showPassword ? l10n.hidePassword : l10n.showPassword,
                           icon: Icon(_showPassword
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined),
@@ -212,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               width: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Sign in'),
+                          : Text(l10n.signIn),
                     ),
                     // Only worth the space once someone has moved off
                     // yeaksa.com, where signing in to the wrong server is easy
@@ -293,10 +296,11 @@ class _ServerDialogState extends State<_ServerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
 
     return AlertDialog(
-      title: const Text('Server'),
+      title: Text(l10n.server),
       // maxFinite, not a fixed width: the rows want the dialog's full width,
       // and a hard number would overflow the narrowest handsets.
       content: SizedBox(
@@ -319,7 +323,7 @@ class _ServerDialogState extends State<_ServerDialog> {
               // the shops above and nothing else. See ServerConfig.
               if (ServerConfig.canEnterCustomHost) ...[
                 _ServerTile(
-                  title: 'Other',
+                  title: l10n.other,
                   selected: _choice == null,
                   onTap: () => _select(null),
                 ),
@@ -334,7 +338,7 @@ class _ServerDialogState extends State<_ServerDialog> {
                       textCapitalization: TextCapitalization.none,
                       onSubmitted: (_) => _save(),
                       decoration: InputDecoration(
-                        labelText: 'Server address',
+                        labelText: l10n.serverAddress,
                         errorText: _error,
                         prefixIcon: const Icon(Icons.dns_outlined),
                       ),
@@ -357,9 +361,9 @@ class _ServerDialogState extends State<_ServerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
-        TextButton(onPressed: _save, child: const Text('Save')),
+        TextButton(onPressed: _save, child: Text(l10n.save)),
       ],
     );
   }

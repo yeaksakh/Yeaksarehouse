@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
+
 import '../theme/app_theme.dart';
 import '../widgets/motion.dart';
 import 'hrm_screen.dart';
@@ -46,31 +48,32 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
     final areas = [
       (
         icon: Icons.assignment_outlined,
         active: Icons.assignment,
-        label: 'Orders',
+        label: l10n.orders,
         color: colors.orders
       ),
       (
         icon: Icons.inventory_2_outlined,
         active: Icons.inventory_2,
-        label: 'Stock',
+        label: l10n.stock,
         color: colors.stock
       ),
       (
         icon: Icons.badge_outlined,
         active: Icons.badge,
-        label: 'HRM',
+        label: l10n.hrm,
         color: colors.hrm
       ),
       (
         icon: Icons.person_outline,
         active: Icons.person,
-        label: 'Profile',
+        label: l10n.profile,
         color: colors.holiday
       ),
     ];

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -53,6 +55,7 @@ class _CountScreenState extends State<CountScreen> {
   }
 
   Future<void> _submit(StockCount count) async {
+    final l10n = AppLocalizations.of(context);
     final stock = context.read<StockController>();
     final staff = context.read<SessionController>().staff;
     if (staff == null) return;
@@ -60,12 +63,12 @@ class _CountScreenState extends State<CountScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Submit this count?'),
+        title: Text(l10n.submitThisCount),
         content: Text(
           count.remainingCount > 0
               ? '${count.countedCount} counted, ${count.remainingCount} not '
                   'counted.\n\nUncounted lines are left exactly as they are. '
-                  'Counted lines overwrite the shelf.'
+                  '${l10n.countedLinesOverwrite}'
               : 'All ${count.lines.length} lines counted.\n\n'
                   'Net change: ${signed(count.netVariance)} units across '
                   '${count.variances.length} lines.',
@@ -73,11 +76,11 @@ class _CountScreenState extends State<CountScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Keep counting'),
+            child: Text(l10n.keepCounting),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Submit'),
+            child: Text(l10n.submit),
           ),
         ],
       ),
@@ -112,21 +115,22 @@ class _CountScreenState extends State<CountScreen> {
   }
 
   Future<void> _discard() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Discard this count?'),
-        content: const Text(
-          'Everything counted so far is thrown away. The shelf is untouched.',
+        title: Text(l10n.discardCountQ),
+        content: Text(
+          l10n.everythingThrownAway,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Keep it'),
+            child: Text(l10n.keepIt),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Discard'),
+            child: Text(l10n.discard),
           ),
         ],
       ),
@@ -137,6 +141,7 @@ class _CountScreenState extends State<CountScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final stock = context.watch<StockController>();
     final staff = context.watch<SessionController>().staff;
     final count = stock.count;
@@ -144,16 +149,16 @@ class _CountScreenState extends State<CountScreen> {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 20,
-        title: const Text(
-          'Stock count',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+        title: Text(
+          l10n.stockCount,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
         ),
         actions: [
           if (count != null)
             IconButton(
               onPressed: _discard,
               icon: const Icon(Icons.delete_outline),
-              tooltip: 'Discard count',
+              tooltip: l10n.discardCount,
             ),
           const SizedBox(width: 8),
         ],
@@ -172,7 +177,7 @@ class _CountScreenState extends State<CountScreen> {
                   icon: const Icon(Icons.check),
                   label: Text(
                     count.countedCount == 0
-                        ? 'Count something to submit'
+                        ? l10n.countSomethingFirst
                         : 'Submit ${plural(count.countedCount, "line")}',
                   ),
                 ),
@@ -182,19 +187,20 @@ class _CountScreenState extends State<CountScreen> {
   }
 
   Widget _startPane(StockController stock) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
         // No fixed height: EmptyState sizes to its content, and pinning it to a
         // guessed number is what made it overflow on a short screen.
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
           child: EmptyState(
             icon: Icons.checklist,
-            title: 'No count open',
+            title: l10n.noCountOpen,
             message:
-                'Start one, walk the shelves, and submit when you are done.',
+                l10n.startOneWalkShelves,
           ),
         ),
         ElevatedButton.icon(
@@ -210,7 +216,7 @@ class _CountScreenState extends State<CountScreen> {
           icon: const Icon(Icons.priority_high),
           label: Text(
             stock.needsAttention.isEmpty
-                ? 'Nothing low or out'
+                ? l10n.nothingLowOrOut
                 : 'Count low and out only (${stock.needsAttention.length})',
           ),
         ),
@@ -226,6 +232,7 @@ class _CountScreenState extends State<CountScreen> {
   }
 
   Widget _countPane(StockController stock, StockCount count) {
+    final l10n = AppLocalizations.of(context);
     final colors = context.appColors;
     final lines = _onlyUncounted
         ? count.lines.where((line) => !line.isCounted).toList()
@@ -242,7 +249,7 @@ class _CountScreenState extends State<CountScreen> {
                   Expanded(
                     child: StatTile(
                       icon: Icons.done,
-                      label: 'Counted',
+                      label: l10n.countedLabel,
                       value: '${count.countedCount}',
                       tone: colors.inStock,
                     ),
@@ -251,7 +258,7 @@ class _CountScreenState extends State<CountScreen> {
                   Expanded(
                     child: StatTile(
                       icon: Icons.pending_outlined,
-                      label: 'Left',
+                      label: l10n.leftToCount,
                       value: '${count.remainingCount}',
                     ),
                   ),
@@ -259,7 +266,7 @@ class _CountScreenState extends State<CountScreen> {
                   Expanded(
                     child: StatTile(
                       icon: Icons.difference,
-                      label: 'Variance',
+                      label: l10n.variance,
                       value: signed(count.netVariance),
                       tone: count.netVariance == 0
                           ? colors.inStock
@@ -271,7 +278,7 @@ class _CountScreenState extends State<CountScreen> {
               const SizedBox(height: 12),
               ScanField(
                 onScan: _handleScan,
-                hintText: 'Scan a shelf item',
+                hintText: l10n.scanAShelfItem,
                 autofocus: false,
               ),
               const SizedBox(height: 10),
@@ -287,7 +294,7 @@ class _CountScreenState extends State<CountScreen> {
                     ),
                   ),
                   FilterChip(
-                    label: const Text('Only uncounted'),
+                    label: Text(l10n.onlyUncounted),
                     selected: _onlyUncounted,
                     onSelected: (value) =>
                         setState(() => _onlyUncounted = value),
@@ -299,10 +306,10 @@ class _CountScreenState extends State<CountScreen> {
         ),
         Expanded(
           child: lines.isEmpty
-              ? const EmptyState(
+              ? EmptyState(
                   icon: Icons.done_all,
-                  title: 'Every line counted',
-                  message: 'Submit when you are ready.',
+                  title: l10n.everyLineCounted,
+                  message: l10n.submitWhenReady,
                 )
               : ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
@@ -328,6 +335,7 @@ class _CountLineTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
 
@@ -388,7 +396,7 @@ class _CountLineTile extends StatelessWidget {
                   ),
                   if (line.isCounted)
                     Text(
-                      variance == 0 ? 'Matches' : signed(variance!),
+                      variance == 0 ? l10n.matches : signed(variance!),
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -412,7 +420,7 @@ class _CountLineTile extends StatelessWidget {
                         ),
                       )
                     : Text(
-                        'Not counted yet',
+                        l10n.notCountedYet,
                         style: TextStyle(color: scheme.onSurfaceVariant),
                       ),
               ),
@@ -420,7 +428,7 @@ class _CountLineTile extends StatelessWidget {
                 IconButton(
                   onPressed: () => onChanged(null),
                   icon: const Icon(Icons.backspace_outlined),
-                  tooltip: 'Clear',
+                  tooltip: l10n.clear,
                 ),
               QtyStepper(
                 value: line.counted ?? 0,
