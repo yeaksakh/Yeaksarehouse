@@ -1,15 +1,18 @@
 name: warehouse
 description: A warehouse floor app - move orders through the shop's fulfilment stages, and scan or count stock.
 publish_to: 'none'
-version: 1.0.2+3
+version: 1.0.5+6
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
+  blue_thermal_printer: ^1.2.3
   flutter:
     sdk: flutter
   flutter_local_notifications: ^18.0.1
+  flutter_localizations:
+    sdk: flutter
   geolocator: ^13.0.2
   http: ^1.2.2
   image_picker: ^1.1.2
@@ -24,5 +27,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
   assets:
     - assets/images/logo.png

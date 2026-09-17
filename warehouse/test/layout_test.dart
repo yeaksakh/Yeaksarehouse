@@ -30,6 +30,9 @@ Future<void> pumpAt(WidgetTester tester, Size size) async {
   final start = DateTime.now().subtract(const Duration(hours: 9));
   await tester.pumpWidget(
     WarehouseApp(
+      // English so these assert against the source strings; the app itself
+      // opens in Khmer.
+      initialLocale: const Locale('en'),
       repository: repositoryWith(),
       auth: FakeAuthApi(),
       hrm: FakeHrmApi(

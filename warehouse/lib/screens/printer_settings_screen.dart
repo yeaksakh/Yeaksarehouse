@@ -1,0 +1,215 @@
+import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
+
+import '../models/box_label.dart';
+import '../services/label_printer.dart';
+import '../widgets/box_label_sticker.dart';
+
+/// Choose which paired Bluetooth printer the box labels go to.
+///
+/// Pairing itself is left to Android's own Bluetooth settings: thermal printers
+/// want a PIN and sometimes a power cycle, and the system dialog handles that
+/// better than anything here could. This screen only picks between machines the
+/// phone has already been introduced to.
+class PrinterSettingsScreen extends StatefulWidget {
+  const PrinterSettingsScreen({super.key, required this.printer});
+
+  final LabelPrinter printer;
+
+  @override
+  State<PrinterSettingsScreen> createState() => _PrinterSettingsScreenState();
+}
+
+class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
+  List<BluetoothDevice> _devices = const [];
+  BluetoothDevice? _selected;
+  bool _loading = true;
+  bool _testing = false;
+  bool _bluetoothOff = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    final on = await widget.printer.isOn;
+    final devices = on ? await widget.printer.devices() : <BluetoothDevice>[];
+    final saved = await widget.printer.restore();
+    if (!mounted) return;
+    setState(() {
+      _bluetoothOff = !on;
+      _devices = devices;
+      _selected = saved;
+      _loading = false;
+    });
+  }
+
+  Future<void> _choose(BluetoothDevice device) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
+    await widget.printer.remember(device);
+    if (!mounted) return;
+    setState(() => _selected = device);
+    // Saved on tap rather than behind a Save button -- there is one setting on
+    // this page and a button to confirm it would be a second thing to forget.
+    // It still has to SAY so, or a packer cannot tell it took.
+    messenger.showSnackBar(SnackBar(
+        content: Text(l10n.printerSaved(device.name ?? l10n.unnamedPrinter))));
+  }
+
+  /// Print one sticker so the packer can see it came out straight before they
+  /// trust it with a parcel. Far cheaper than discovering the alignment is off
+  /// after twelve boxes have gone out.
+  Future<void> _testPrint() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
+    setState(() => _testing = true);
+    try {
+      final png = await renderSticker(const BoxLabelSticker(
+        label: BoxLabel(
+            product: 'Test label',
+            sku: 'TEST-SKU',
+            boxNo: 1,
+            boxTotal: 1,
+            index: 1,
+            total: 1),
+        invoiceNo: 'TEST',
+        customer: 'Printer check',
+      ));
+      final result = await widget.printer.printImage(png);
+      messenger.showSnackBar(SnackBar(
+        content: Text(result.succeeded
+            ? l10n.testLabelSent
+            : result.message ?? l10n.somethingWentWrong),
+      ));
+    } finally {
+      if (mounted) setState(() => _testing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.labelPrinter),
+        actions: [
+          IconButton(
+            tooltip: l10n.refresh,
+            onPressed: _loading ? null : _load,
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                if (_bluetoothOff)
+                  _Note(
+                    icon: Icons.bluetooth_disabled,
+                    title: l10n.bluetoothIsOff,
+                    body: l10n.bluetoothIsOffBody,
+                  )
+                else if (_devices.isEmpty)
+                  _Note(
+                    icon: Icons.print_disabled_outlined,
+                    title: l10n.noPrintersPaired,
+                    body: l10n.noPrintersPairedBody,
+                  )
+                else ...[
+                  Text(l10n.pairedPrinters,
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 8),
+                  for (final device in _devices)
+                    Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        onTap: () => _choose(device),
+                        leading: Icon(
+                          _selected?.address == device.address
+                              ? Icons.check_circle
+                              : Icons.print_outlined,
+                          color: _selected?.address == device.address
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
+                        ),
+                        title: Text(device.name ?? l10n.unnamedPrinter),
+                        subtitle: Text(device.address ?? ''),
+                        // The saved choice is the whole point of this page, so
+                        // it is stated rather than left to a tick a packer has
+                        // to interpret.
+                        trailing: _selected?.address == device.address
+                            ? Chip(
+                                label: Text(l10n.inUse),
+                                visualDensity: VisualDensity.compact,
+                              )
+                            : null,
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  FilledButton.icon(
+                    onPressed:
+                        _selected == null || _testing ? null : _testPrint,
+                    icon: _testing
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.receipt_long),
+                    label: Text(_testing ? l10n.sending : l10n.printATestLabel),
+                  ),
+                  if (_selected != null)
+                    TextButton(
+                      onPressed: () async {
+                        await widget.printer.forget();
+                        if (!mounted) return;
+                        setState(() => _selected = null);
+                      },
+                      child: Text(l10n.forgetThisPrinter),
+                    ),
+                ],
+              ],
+            ),
+    );
+  }
+}
+
+class _Note extends StatelessWidget {
+  const _Note({required this.icon, required this.title, required this.body});
+
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    Text(body),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+}

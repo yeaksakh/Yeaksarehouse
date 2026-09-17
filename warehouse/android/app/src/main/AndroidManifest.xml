@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- Signing in to yeaksa.com. The debug and profile manifests add this on
          their own, so without it here only a release build cannot connect. -->
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -11,6 +12,16 @@
          attendance record the website keeps. Coarse is enough for a yard and
          is the weaker ask; fine is declared because Android grants coarse-only
          when both are requested and the person chooses it. -->
+    <!-- Bluetooth label printer. BLUETOOTH/BLUETOOTH_ADMIN are the pre-Android-12
+         spelling and are capped with maxSdkVersion so Play does not read them as a
+         request for the modern ones; BLUETOOTH_SCAN/CONNECT are what Android 12+
+         actually checks. neverForLocation says the scan is not a way to locate the
+         handset, which is what lets it run without the location permission. -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation" tools:targetApi="s"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 

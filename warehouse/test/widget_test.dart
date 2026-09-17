@@ -26,6 +26,9 @@ Future<void> pumpApp(WidgetTester tester,
 
   await tester.pumpWidget(
     WarehouseApp(
+      // English so these assert against the source strings; the app itself
+      // opens in Khmer.
+      initialLocale: const Locale('en'),
       repository: repositoryWith(),
       auth: FakeAuthApi(),
       shipments: FakeShipmentsApi(orders: orders),

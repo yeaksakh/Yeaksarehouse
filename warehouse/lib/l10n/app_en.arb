@@ -1,0 +1,128 @@
+{
+  "@@locale": "en",
+  "orders": "Orders",
+  "stock": "Stock",
+  "hrm": "HRM",
+  "profile": "Profile",
+  "settings": "Settings",
+  "stageOrdered": "Ordered",
+  "stagePacked": "Packed",
+  "stageAudited": "Audited",
+  "couldNotLoadShipments": "Could not load shipments",
+  "pullDownToTryAgain": "Pull down to try again.",
+  "nothingHere": "Nothing here yet",
+  "notAccepted": "Not accepted",
+  "collectCash": "Collect cash",
+  "hasANote": "Has a note",
+  "withStaff": "With {name}",
+  "@withStaff": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "itemsCount": "{count,plural, =1{1 item} other{{count} items}}",
+  "@itemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "compact"
+      }
+    }
+  },
+  "unitsCount": "{count,plural, =1{1 unit} other{{count} units}}",
+  "@unitsCount": {
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "compact"
+      }
+    }
+  },
+  "deliverTo": "Deliver to",
+  "items": "Items",
+  "packedOf": "{done} / {total} packed",
+  "@packedOf": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "noRackLocation": "No rack location set",
+  "collectOnDelivery": "Collect on delivery",
+  "collectOnDeliveryBody": "Put the invoice in the box. The rider collects at the door.",
+  "notPaidCollect": "Not paid — collect on delivery",
+  "acceptToPack": "Accept to pack",
+  "markPacked": "Mark packed",
+  "markAudited": "Mark audited",
+  "releaseShipment": "Release",
+  "waitingForRider": "Waiting for the rider",
+  "waitingForRiderBody": "The rider marks it picked up from the rider app.",
+  "printBoxLabels": "Print box labels",
+  "preparingLabels": "Preparing labels…",
+  "labelPrinter": "Label printer",
+  "chooseBluetoothPrinter": "Choose the Bluetooth sticker printer",
+  "bluetoothLabelPrinter": "Bluetooth label printer",
+  "theWarehouseStickerPrinter": "The warehouse sticker printer",
+  "otherPrinterOrPdf": "Other printer, or save as PDF",
+  "wifiUsbOrKeepCopy": "Wi-Fi, USB, or keep a copy",
+  "chooseTheLabelPrinter": "Choose the label printer",
+  "pairedPrinters": "Paired printers",
+  "printATestLabel": "Print a test label",
+  "sending": "Sending…",
+  "forgetThisPrinter": "Forget this printer",
+  "testLabelSent": "Test label sent.",
+  "bluetoothIsOff": "Bluetooth is off",
+  "bluetoothIsOffBody": "Switch Bluetooth on, then tap refresh.",
+  "noPrintersPaired": "No printers paired",
+  "noPrintersPairedBody": "Pair the printer in Android Settings > Bluetooth first, then come back and tap refresh.",
+  "nothingToLabel": "This shipment has nothing to label.",
+  "labelsSent": "{count,plural, =1{1 label sent.} other{{count} labels sent.}}",
+  "@labelsSent": {
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "compact"
+      }
+    }
+  },
+  "refresh": "Refresh",
+  "unnamedPrinter": "Unnamed printer",
+  "whatYouCanDo": "What you can do",
+  "acceptAndPack": "Accept and pack shipments",
+  "markShipmentsAudited": "Mark shipments audited",
+  "changeStockNumbers": "Change stock numbers",
+  "signOut": "Sign out",
+  "handsetsAreShared": "Handsets are shared. Sign out at the end of your shift.",
+  "language": "Language",
+  "languageKhmer": "ភាសាខ្មែរ",
+  "languageEnglish": "English",
+  "signIn": "Sign in",
+  "username": "Username",
+  "password": "Password",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "signInWithStaffAccount": "Sign in with your yeaksa.com staff account.",
+  "server": "Server",
+  "serverAddress": "Server address",
+  "other": "Other",
+  "defaultChoice": "Default",
+  "cancel": "Cancel",
+  "save": "Save",
+  "couldNotReachServer": "Could not reach the server.",
+  "somethingWentWrong": "That did not work.",
+  "printerSaved": "Saved. Labels will print to {name}.",
+  "@printerSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "inUse": "In use"
+}

@@ -1,3 +1,4 @@
+import '../models/box_label.dart';
 import 'package:flutter/foundation.dart';
 
 import '../data/shipments_api.dart';
@@ -59,6 +60,9 @@ class TasksController extends ChangeNotifier {
     }
     return null;
   }
+
+  /// The box stickers as data, for the Bluetooth printer path.
+  Future<LabelSheet> labelData(String id) => _api.labelData(id);
 
   /// The box stickers for one shipment, as PDF bytes.
   ///

@@ -20,6 +20,7 @@ class LocalStore {
   static const _stockKey = 'wh_stock_v1';
   static const _countKey = 'wh_count_draft_v1';
   static const _serverUrlKey = 'wh_server_url_v1';
+  static const _languageKey = 'wh_language_v1';
 
   /// v2 carries the bearer token. The v1 key held a demo sign-in with no token,
   /// which is not a session, so it is not read.
@@ -43,6 +44,11 @@ class LocalStore {
 
   Future<void> _write(String key, Object? value) async =>
       (await _prefs).setString(key, jsonEncode(value));
+
+  Future<String?> loadLanguage() async => (await _prefs).getString(_languageKey);
+
+  Future<void> saveLanguage(String code) async =>
+      (await _prefs).setString(_languageKey, code);
 
   Future<List<StockItem>?> loadStock() => _read(_stockKey, (decoded) {
         return (decoded as List<dynamic>)

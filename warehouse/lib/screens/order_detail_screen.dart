@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
+import 'printer_settings_screen.dart';
+import '../widgets/box_label_sticker.dart';
+import '../services/label_printer.dart';
 
 import '../models/fulfilment_stage.dart';
 import '../models/order.dart';
@@ -33,6 +36,10 @@ class OrderDetailScreen extends StatefulWidget {
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
   /// True while the label PDF is being fetched and the print sheet opened.
   bool _printing = false;
+
+  /// Held for the life of the screen so the Bluetooth connection is opened
+  /// once for a whole parcel rather than once per sticker.
+  final LabelPrinter _labelPrinter = LabelPrinter();
 
   /// The item a scan last landed on, so it can be flashed.
   String? _flashedLineId;
@@ -388,21 +395,102 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
-  /// Print the box stickers for this shipment.
+  /// Ask where the stickers should go, then send them.
   ///
-  /// The PDF is built by the server from the same template the website prints,
-  /// then handed to the platform's print dialog -- which is what reaches the
-  /// label printer the phone is paired with, and which also offers "Save as
-  /// PDF" for a packer with no printer nearby.
+  /// Two routes, because warehouses have both kinds of machine. The Bluetooth
+  /// one draws each sticker on the phone and sends raster rows, which is all a
+  /// thermal label printer understands. The system dialog takes the server's
+  /// PDF and reaches Wi-Fi and USB printers, and offers "Save as PDF" for a
+  /// packer with no printer at hand.
   Future<void> _printLabels(Order order) async {
+    final choice = await showModalBottomSheet<_PrintRoute>(
+      context: context,
+      builder: (sheet) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.bluetooth),
+              title: const Text('Bluetooth label printer'),
+              subtitle: const Text('The warehouse sticker printer'),
+              onTap: () => Navigator.of(sheet).pop(_PrintRoute.bluetooth),
+            ),
+            ListTile(
+              leading: const Icon(Icons.print_outlined),
+              title: const Text('Other printer, or save as PDF'),
+              subtitle: const Text('Wi-Fi, USB, or keep a copy'),
+              onTap: () => Navigator.of(sheet).pop(_PrintRoute.system),
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings_outlined),
+              title: const Text('Choose the label printer'),
+              onTap: () => Navigator.of(sheet).pop(_PrintRoute.settings),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !mounted) return;
+
+    switch (choice) {
+      case _PrintRoute.settings:
+        await Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (_) => PrinterSettingsScreen(printer: _labelPrinter),
+        ));
+      case _PrintRoute.system:
+        await _printViaSystem(order);
+      case _PrintRoute.bluetooth:
+        await _printViaBluetooth(order);
+    }
+  }
+
+  Future<void> _printViaSystem(Order order) async {
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _printing = true);
     try {
       final pdf = await context.read<TasksController>().labels(order.id);
       await Printing.layoutPdf(
-        onLayout: (_) async => pdf,
-        name: 'labels-${order.code}',
-      );
+          onLayout: (_) async => pdf, name: 'labels-${order.code}');
+    } catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text('$error')));
+    } finally {
+      if (mounted) setState(() => _printing = false);
+    }
+  }
+
+  /// One sticker at a time, in order, stopping at the first refusal.
+  ///
+  /// Stopping matters: if the printer runs out of labels on sticker three of
+  /// six, carrying on sends three more into a machine that cannot print them
+  /// and the packer has no idea which ones are missing.
+  Future<void> _printViaBluetooth(Order order) async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _printing = true);
+    try {
+      final sheet = await context.read<TasksController>().labelData(order.id);
+      if (sheet.isEmpty) {
+        messenger.showSnackBar(const SnackBar(
+            content: Text('This shipment has nothing to label.')));
+        return;
+      }
+      var sent = 0;
+      for (final label in sheet.labels) {
+        final png = await renderSticker(BoxLabelSticker(
+          label: label,
+          invoiceNo: sheet.invoiceNo,
+          customer: sheet.customer,
+        ));
+        final result = await _labelPrinter.printImage(png);
+        if (!result.succeeded) {
+          messenger.showSnackBar(SnackBar(
+              content: Text('${result.message} '
+                  '($sent of ${sheet.labels.length} printed)')));
+          return;
+        }
+        sent++;
+      }
+      messenger.showSnackBar(SnackBar(
+          content: Text('$sent label${sent == 1 ? '' : 's'} sent.')));
     } catch (error) {
       messenger.showSnackBar(SnackBar(content: Text('$error')));
     } finally {
@@ -607,3 +695,6 @@ class _Banner extends StatelessWidget {
     );
   }
 }
+
+/// Where a packer wants this parcel's stickers to go.
+enum _PrintRoute { bluetooth, system, settings }

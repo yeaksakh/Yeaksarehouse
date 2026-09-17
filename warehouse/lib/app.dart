@@ -16,6 +16,8 @@ import 'state/server_config.dart';
 import 'state/session_controller.dart';
 import 'state/stock_controller.dart';
 import 'state/tasks_controller.dart';
+import 'l10n/app_localizations.dart';
+import 'state/language_config.dart';
 import 'theme/app_theme.dart';
 
 class WarehouseApp extends StatelessWidget {
@@ -27,7 +29,12 @@ class WarehouseApp extends StatelessWidget {
     this.shipments,
     this.hrm,
     this.watchForNewOrders = true,
+    this.initialLocale,
   });
+
+  /// Forces a language, overriding whatever is saved. Tests pass English so
+  /// they can assert against the source strings rather than the translations.
+  final Locale? initialLocale;
 
   /// Injectable so tests can supply their own fixtures.
   final WarehouseRepository? repository;
@@ -93,15 +100,26 @@ class WarehouseApp extends StatelessWidget {
               StockController(effectiveRepository, store: effectiveStore)
                 ..load(),
         ),
+        ChangeNotifierProvider(
+          create: (_) =>
+              LanguageConfig(store: effectiveStore, initial: initialLocale),
+        ),
       ],
-      child: MaterialApp(
-        title: 'Yeaksarehouse',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(),
-        // Light only: the palette is the app's own, and a warehouse handset
-        // set to dark must still show the same colours as the one beside it.
-        themeMode: ThemeMode.light,
-        home: _Root(watchForNewOrders: watchForNewOrders),
+      // Watched, not read: changing the language has to rebuild MaterialApp
+      // itself, or the switch would take effect only on the next cold start.
+      child: Consumer<LanguageConfig>(
+        builder: (context, language, _) => MaterialApp(
+          title: 'Yeaksarehouse',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light(),
+          // Light only: the palette is the app's own, and a warehouse handset
+          // set to dark must still show the same colours as the one beside it.
+          themeMode: ThemeMode.light,
+          locale: language.locale,
+          supportedLocales: LanguageConfig.supported,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: _Root(watchForNewOrders: watchForNewOrders),
+        ),
       ),
     );
   }

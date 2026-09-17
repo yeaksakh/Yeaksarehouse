@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/fulfilment_stage.dart';
+import '../models/box_label.dart';
 import '../models/order.dart';
 import '../state/server_config.dart';
 
@@ -85,6 +86,22 @@ class ShipmentsApi {
   }
 
   /// One shipment with its items, who packed each, and its photos.
+  /// The box stickers as DATA, for drawing on the phone.
+  ///
+  /// What a Bluetooth thermal printer needs: it takes raster rows, not a PDF,
+  /// so the sticker is drawn here. The server still decides how many stickers
+  /// and what is on each, so both printing paths agree on the arithmetic.
+  Future<LabelSheet> labelData(String id) async {
+    final body = await _send('GET', '/api/shipments/$id/labels',
+        query: const {'format': 'json'});
+    final data = body['data'];
+    if (data is! Map<String, dynamic>) {
+      throw ShipmentsException(
+          'The server sent something the app could not read.');
+    }
+    return LabelSheet.fromApi(data);
+  }
+
   /// The box stickers for one shipment, as a PDF.
   ///
   /// The same sheet the website prints, from the same template. Handed to the
