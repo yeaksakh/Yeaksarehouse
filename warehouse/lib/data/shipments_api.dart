@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'dart:async';
 import 'dart:convert';
 
@@ -84,6 +85,44 @@ class ShipmentsApi {
   }
 
   /// One shipment with its items, who packed each, and its photos.
+  /// The box stickers for one shipment, as a PDF.
+  ///
+  /// The same sheet the website prints, from the same template. Handed to the
+  /// platform's print service by the caller rather than drawn in Dart, so there
+  /// is one label layout to keep correct instead of two.
+  ///
+  /// Not routed through [_send]: that decodes JSON, and a PDF fed through it
+  /// would fail to parse -- losing the real reason ("not signed in", "nothing
+  /// to label") behind a decode error. A FAILING request does answer in JSON,
+  /// so that case is decoded here and raised with the server's own wording.
+  Future<Uint8List> labels(String id) async {
+    final uri = Uri.parse('${_baseUrl()}/api/shipments/$id/labels');
+    final token = _token();
+    final http.Response response;
+    try {
+      response = await _http.get(uri, headers: {
+        'Accept': 'application/pdf',
+        if (token != null) 'Authorization': 'Bearer $token',
+      }).timeout(timeout);
+    } on TimeoutException {
+      throw ShipmentsException('The labels took too long to prepare.');
+    } catch (_) {
+      throw ShipmentsException('Could not reach the server.');
+    }
+
+    final type = response.headers['content-type'] ?? '';
+    if (response.statusCode == 200 && !type.contains('json')) {
+      return response.bodyBytes;
+    }
+    try {
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      throw ShipmentsException(
+          (body['message'] as String?) ?? 'The labels could not be prepared.');
+    } on FormatException {
+      throw ShipmentsException('The labels could not be prepared.');
+    }
+  }
+
   Future<Order> detail(String id) async =>
       _order(await _send('GET', '/api/shipments/$id'));
 

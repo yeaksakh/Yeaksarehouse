@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '../models/fulfilment_stage.dart';
@@ -30,6 +31,9 @@ class OrderDetailScreen extends StatefulWidget {
 }
 
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
+  /// True while the label PDF is being fetched and the print sheet opened.
+  bool _printing = false;
+
   /// The item a scan last landed on, so it can be flashed.
   String? _flashedLineId;
 
@@ -366,10 +370,44 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
           ],
           const SizedBox(height: 20),
+          OutlinedButton.icon(
+            onPressed: _printing ? null : () => _printLabels(order),
+            icon: _printing
+                ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.print_outlined),
+            label: Text(_printing ? 'Preparing labels...' : 'Print box labels'),
+          ),
+          const SizedBox(height: 10),
           ..._actions(order, staff: staff, mine: mine, waiting: waiting),
         ],
       ),
     );
+  }
+
+  /// Print the box stickers for this shipment.
+  ///
+  /// The PDF is built by the server from the same template the website prints,
+  /// then handed to the platform's print dialog -- which is what reaches the
+  /// label printer the phone is paired with, and which also offers "Save as
+  /// PDF" for a packer with no printer nearby.
+  Future<void> _printLabels(Order order) async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _printing = true);
+    try {
+      final pdf = await context.read<TasksController>().labels(order.id);
+      await Printing.layoutPdf(
+        onLayout: (_) async => pdf,
+        name: 'labels-${order.code}',
+      );
+    } catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text('$error')));
+    } finally {
+      if (mounted) setState(() => _printing = false);
+    }
   }
 
   List<Widget> _actions(
@@ -381,6 +419,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
     final stage = order.stage;
+
+    // Printing is useful at every stage -- while packing, and again if a
+    // sticker is torn off in the van -- so it is not tied to one of the
+    // branches below. Added by the caller, not here, for that reason.
 
     if (stage == FulfilmentStage.ordered && !order.isAccepted) {
       return [

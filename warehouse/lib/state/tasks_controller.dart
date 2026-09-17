@@ -60,6 +60,12 @@ class TasksController extends ChangeNotifier {
     return null;
   }
 
+  /// The box stickers for one shipment, as PDF bytes.
+  ///
+  /// A straight passthrough: nothing here to cache or hold, and the screen
+  /// hands the bytes to the print dialog and forgets them.
+  Future<Uint8List> labels(String id) => _api.labels(id);
+
   Future<void> load(FulfilmentStage stage) async {
     _loading.add(stage);
     _error = null;
