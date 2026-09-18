@@ -219,7 +219,7 @@ class ProfileScreen extends StatelessWidget {
                   onTap: () =>
                       Navigator.of(context).push(MaterialPageRoute<void>(
                     builder: (_) =>
-                        PrinterSettingsScreen(printer: LabelPrinter()),
+                        PrinterSettingsScreen(printer: context.read<LabelPrinter>()),
                   )),
                 ),
               ],

@@ -39,9 +39,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   /// True while the label PDF is being fetched and the print sheet opened.
   bool _printing = false;
 
-  /// Held for the life of the screen so the Bluetooth connection is opened
-  /// once for a whole parcel rather than once per sticker.
-  final LabelPrinter _labelPrinter = LabelPrinter();
 
   /// The item a scan last landed on, so it can be flashed.
   String? _flashedLineId;
@@ -438,7 +435,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     switch (choice) {
       case _PrintRoute.settings:
         await Navigator.of(context).push(MaterialPageRoute<void>(
-          builder: (_) => PrinterSettingsScreen(printer: _labelPrinter),
+          builder: (_) => PrinterSettingsScreen(printer: context.read<LabelPrinter>()),
         ));
       case _PrintRoute.system:
         await _printViaSystem(order);
@@ -469,6 +466,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Future<void> _printViaBluetooth(Order order) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    // Resolved before the first await: the loop below crosses several, and
+    // reading the context after one is how a disposed screen ends up handing
+    // back a printer from a page that no longer exists.
+    final printer = context.read<LabelPrinter>();
     setState(() => _printing = true);
     try {
       final sheet = await context.read<TasksController>().labelData(order.id);
@@ -484,7 +485,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           invoiceNo: sheet.invoiceNo,
           customer: sheet.customer,
         ));
-        final result = await _labelPrinter.printImage(png);
+        final result = await printer.printImage(png);
         if (!result.succeeded) {
           messenger.showSnackBar(SnackBar(
               content: Text('${result.message} '

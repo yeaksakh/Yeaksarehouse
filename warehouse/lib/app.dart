@@ -17,6 +17,7 @@ import 'state/session_controller.dart';
 import 'state/stock_controller.dart';
 import 'state/tasks_controller.dart';
 import 'l10n/app_localizations.dart';
+import 'services/label_printer.dart';
 import 'state/language_config.dart';
 import 'theme/app_theme.dart';
 
@@ -104,6 +105,11 @@ class WarehouseApp extends StatelessWidget {
           create: (_) =>
               LanguageConfig(store: effectiveStore, initial: initialLocale),
         ),
+        // ONE printer for the whole app, not one per screen. Two instances each
+        // keep their own idea of which device is chosen and whether it is
+        // connected: picking a printer in Settings left the order screen's copy
+        // still empty, so the test label printed and the real one did not.
+        Provider(create: (_) => LabelPrinter()),
       ],
       // Watched, not read: changing the language has to rebuild MaterialApp
       // itself, or the switch would take effect only on the next cold start.

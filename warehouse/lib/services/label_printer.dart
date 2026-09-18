@@ -36,16 +36,16 @@ class LabelPrinter {
   Future<BluetoothDevice?> restore() async {
     final stored = (await SharedPreferences.getInstance())
         .getString(_savedDeviceKey);
-    if (stored == null) return null;
-    final parts = stored.split('|');
-    if (parts.length != 2) return null;
+    if (stored == null || stored.isEmpty) return null;
+
+    // Older builds stored "name|address"; keep reading those.
+    final address = stored.contains('|') ? stored.split('|').last : stored;
 
     // Matched against what is ACTUALLY paired now: a printer that has been
     // unpaired since should show as "not set" rather than failing at the moment
     // someone presses print.
-    final bonded = await devices();
-    for (final device in bonded) {
-      if (device.name == parts[0] && device.address == parts[1]) {
+    for (final device in await devices()) {
+      if (device.address == address) {
         _selected = device;
         return device;
       }
@@ -55,8 +55,12 @@ class LabelPrinter {
 
   Future<void> remember(BluetoothDevice device) async {
     _selected = device;
+    // Address only. Storing "name|address" wrote the literal text "null" for a
+    // printer with no name, and restore then compared that against a real null
+    // and never matched -- so the choice looked saved and was silently lost.
+    // The address is what identifies the machine anyway; the name is a label.
     await (await SharedPreferences.getInstance())
-        .setString(_savedDeviceKey, '${device.name}|${device.address}');
+        .setString(_savedDeviceKey, device.address ?? '');
   }
 
   Future<void> forget() async {
@@ -84,7 +88,8 @@ class LabelPrinter {
   Future<PrinterResult> connect([BluetoothDevice? device]) async {
     final target = device ?? _selected ?? await restore();
     if (target == null) {
-      return const PrinterResult.failed('No printer chosen yet.');
+      return const PrinterResult.failed(
+          'No printer chosen yet. Pick one in Profile > Label printer.');
     }
     if (!await isOn) {
       return const PrinterResult.failed('Bluetooth is switched off.');
