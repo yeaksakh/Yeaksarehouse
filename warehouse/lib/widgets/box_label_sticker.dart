@@ -67,11 +67,27 @@ class BoxLabelSticker extends StatelessWidget {
             Container(height: 2, color: Colors.black),
             const SizedBox(height: 6),
             Expanded(
-              child: Text(
-                label.product,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: black.copyWith(fontSize: 19, fontWeight: FontWeight.w700),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      label.product,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: black.copyWith(
+                          fontSize: 19, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  // What goes in THIS box, beside the name it belongs to. The
+                  // packer reads the two together while counting bottles in.
+                  Text(
+                    'x${label.quantityLabel}',
+                    style: black.copyWith(
+                        fontSize: 22, fontWeight: FontWeight.w900),
+                  ),
+                ],
               ),
             ),
             if (label.sku.isNotEmpty)

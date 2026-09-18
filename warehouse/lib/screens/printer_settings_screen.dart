@@ -77,7 +77,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
             boxNo: 1,
             boxTotal: 1,
             index: 1,
-            total: 1),
+            total: 1,
+            quantity: 4),
         invoiceNo: 'TEST',
         customer: 'Printer check',
       ));

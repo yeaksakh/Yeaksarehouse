@@ -9,7 +9,8 @@ BoxLabelSticker sticker(int n) => BoxLabelSticker(
           boxNo: n,
           boxTotal: 6,
           index: n,
-          total: 6),
+          total: 6,
+          quantity: 4),
       invoiceNo: 'POS-2026-1',
       customer: 'Dara Shop',
     );

@@ -12,6 +12,7 @@ class BoxLabel {
     required this.boxTotal,
     required this.index,
     required this.total,
+    required this.quantity,
   });
 
   final String product;
@@ -27,6 +28,18 @@ class BoxLabel {
   final int index;
   final int total;
 
+  /// How many units go in THIS box -- a full box everywhere except the last,
+  /// which takes the remainder. Ten bottles four to a box is 4, 4, 2, and a
+  /// packer looking for a fourth bottle that does not exist is how a parcel
+  /// ends up held open on the bench.
+  final double quantity;
+
+  /// "4" or "2.5" -- trailing zeros dropped, because the ERP sells by weight
+  /// and length as well as by the piece.
+  String get quantityLabel => quantity == quantity.roundToDouble()
+      ? quantity.toStringAsFixed(0)
+      : quantity.toString();
+
   /// "2/3" -- this box within its product.
   String get boxOfBox => '$boxNo/$boxTotal';
 
@@ -40,6 +53,9 @@ class BoxLabel {
         boxTotal: (json['box_total'] as num?)?.toInt() ?? 1,
         index: (json['index'] as num?)?.toInt() ?? 1,
         total: (json['total'] as num?)?.toInt() ?? 1,
+        // Older servers do not send this; one unit is the safe reading, since
+        // a sticker claiming zero tells the packer nothing.
+        quantity: (json['quantity'] as num?)?.toDouble() ?? 1,
       );
 }
 

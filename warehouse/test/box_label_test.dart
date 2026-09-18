@@ -11,12 +11,25 @@ void main() {
         'box_total': 3,
         'index': 5,
         'total': 6,
+        'quantity': 4,
       });
 
       expect(l.product, 'Soap 1000ml');
       expect(l.sku, 'SKU-1');
       expect(l.boxOfBox, '2/3');
       expect(l.indexOfTotal, '5 of 6');
+      expect(l.quantityLabel, '4');
+    });
+
+    test('a whole quantity prints without a decimal point', () {
+      expect(BoxLabel.fromApi(const {'quantity': 4.0}).quantityLabel, '4');
+      // The ERP sells by weight and length too, so this is not always whole.
+      expect(BoxLabel.fromApi(const {'quantity': 2.5}).quantityLabel, '2.5');
+    });
+
+    test('an older server that sends no quantity reads as one', () {
+      // Better one than zero: a sticker claiming zero tells the packer nothing.
+      expect(BoxLabel.fromApi(const {'product': 'X'}).quantity, 1);
     });
 
     test('a missing count falls back to one, never zero', () {
