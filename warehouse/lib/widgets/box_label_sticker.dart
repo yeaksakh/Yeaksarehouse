@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import '../models/box_label.dart';
 import '../services/label_bitmap.dart';
 import '../services/label_printer.dart';
+import 'label_qr.dart';
 
 /// One 45 x 30 mm sticker, drawn for a thermal printer.
 ///
@@ -25,24 +26,47 @@ class BoxLabelSticker extends StatelessWidget {
     required this.label,
     required this.invoiceNo,
     required this.customer,
+    this.phone = '',
+    this.seller = '',
+    this.driver = '',
+    this.qrData = '',
   });
 
   final BoxLabel label;
   final String invoiceNo;
   final String customer;
 
+  /// The customer's phone, under their name -- the number a driver rings from
+  /// the gate. Blank rows take no space rather than leaving a gap.
+  final String phone;
+
+  /// Who sold it, and who is taking it -- the same two lines the website's
+  /// sticker carries. Blank when the server did not send them, and a blank one
+  /// takes no space rather than leaving a gap.
+  final String seller;
+  final String driver;
+
+  /// The shipment's public page. Blank leaves the corner empty rather than
+  /// printing a code that leads nowhere.
+  final String qrData;
+
   /// 45 x 30 mm at 8 dots/mm, the usual resolution of these machines: 360 x 240.
   /// Sent at exactly this size so the printer does not rescale and blur it.
   static const Size dots = Size(360, 240);
 
+  /// 14 mm, matching the website's sticker. Big enough for a 3-dot module on a
+  /// URL-length code, which is what makes it scan first time -- see [LabelQr].
+  static const double qrDots = 112;
+
   @override
   Widget build(BuildContext context) {
     const black = TextStyle(color: Colors.black, height: 1.1);
+    final hasQr = qrData.isNotEmpty;
     return Container(
       width: dots.width,
       height: dots.height,
       color: Colors.white,
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(8),
       child: DefaultTextStyle(
         style: black,
         child: Column(
@@ -56,67 +80,119 @@ class BoxLabelSticker extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: black.copyWith(
-                          fontSize: 22, fontWeight: FontWeight.w900)),
+                          fontSize: 20, fontWeight: FontWeight.w900)),
                 ),
                 // The box number is what a picker reads first when a parcel
                 // arrives in several pieces, so it gets the biggest type here.
                 Text('BOX ${label.boxOfBox}',
                     style: black.copyWith(
-                        fontSize: 26, fontWeight: FontWeight.w900)),
+                        fontSize: 22, fontWeight: FontWeight.w900)),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Container(height: 2, color: Colors.black),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Expanded(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(
-                      label.product,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: black.copyWith(
-                          fontSize: 19, fontWeight: FontWeight.w700),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                label.product,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: black.copyWith(
+                                    fontSize: 17, fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            // What goes in THIS box, beside the name it belongs
+                            // to. The packer reads the two together while
+                            // counting bottles in.
+                            Text(
+                              'x${label.quantityLabel}',
+                              style: black.copyWith(
+                                  fontSize: 20, fontWeight: FontWeight.w900),
+                            ),
+                          ],
+                        ),
+                        if (label.sku.isNotEmpty)
+                          Text(label.sku,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: black.copyWith(fontSize: 14)),
+                        const Spacer(),
+                        Text(customer,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: black.copyWith(
+                                fontSize: 15, fontWeight: FontWeight.w700)),
+                        // The marks are the website's own, so a packer holding
+                        // one of each sticker reads the same rows.
+                        if (phone.isNotEmpty)
+                          _Staff(mark: '\u260E', text: phone),
+                        if (seller.isNotEmpty)
+                          _Staff(mark: '\u2605', text: seller),
+                        if (driver.isNotEmpty)
+                          _Staff(mark: '\u2691', text: driver),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  // What goes in THIS box, beside the name it belongs to. The
-                  // packer reads the two together while counting bottles in.
-                  Text(
-                    'x${label.quantityLabel}',
-                    style: black.copyWith(
-                        fontSize: 22, fontWeight: FontWeight.w900),
-                  ),
+                  if (hasQr) ...[
+                    const SizedBox(width: 4),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        LabelQr(data: qrData, dots: qrDots),
+                        Text(label.indexOfTotal,
+                            style: black.copyWith(
+                                fontSize: 14, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ] else
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Text(label.indexOfTotal,
+                          style: black.copyWith(
+                              fontSize: 14, fontWeight: FontWeight.w700)),
+                    ),
                 ],
               ),
-            ),
-            if (label.sku.isNotEmpty)
-              Text(label.sku,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: black.copyWith(fontSize: 17)),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(customer,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: black.copyWith(fontSize: 16)),
-                ),
-                Text(label.indexOfTotal,
-                    style: black.copyWith(
-                        fontSize: 16, fontWeight: FontWeight.w700)),
-              ],
             ),
           ],
         ),
       ),
     );
   }
+}
+
+/// One "who" row: a mark, then a name.
+///
+/// The mark is a single glyph rather than a word so the row costs the same in
+/// every language -- the app runs in Khmer, and "Seller:" and "អ្នកលក់៖" are
+/// not the same width on a 45 mm sticker.
+class _Staff extends StatelessWidget {
+  const _Staff({required this.mark, required this.text});
+
+  final String mark;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(top: 1),
+        child: Text('$mark $text',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.black, height: 1.1, fontSize: 13)),
+      );
 }
 
 /// Draws [sticker] off-screen and returns it as PNG bytes.

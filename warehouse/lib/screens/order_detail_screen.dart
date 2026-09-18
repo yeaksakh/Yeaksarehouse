@@ -484,6 +484,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           label: label,
           invoiceNo: sheet.invoiceNo,
           customer: sheet.customer,
+          phone: sheet.phone,
+          seller: sheet.seller,
+          driver: sheet.driver,
+          qrData: sheet.publicUrl,
         ));
         final result = await printer.printLabel(sticker);
         if (!result.succeeded) {

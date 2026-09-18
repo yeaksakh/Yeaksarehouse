@@ -65,19 +65,63 @@ class LabelSheet {
     required this.invoiceNo,
     required this.customer,
     required this.labels,
+    this.phone = '',
+    this.seller = '',
+    this.driverName = '',
+    this.driverPhone = '',
+    this.publicUrl = '',
   });
 
   final String invoiceNo;
   final String customer;
   final List<BoxLabel> labels;
 
+  final String phone;
+
+  /// Who sold it and who is taking it. Both are on the website's sticker, so
+  /// they are on this one: a parcel whose two labels disagree is a parcel
+  /// somebody has to stop and ask about.
+  final String seller;
+  final String driverName;
+  final String driverPhone;
+
+  /// What the QR carries -- the shipment's public page, the same URL the
+  /// website's QR encodes, so a sticker printed from either scans to the same
+  /// place.
+  final String publicUrl;
+
   bool get isEmpty => labels.isEmpty;
 
-  factory LabelSheet.fromApi(Map<String, dynamic> json) => LabelSheet(
-        invoiceNo: (json['invoice_no'] as String?)?.trim() ?? '',
-        customer: (json['customer'] as String?)?.trim() ?? '',
-        labels: ((json['labels'] as List<dynamic>?) ?? const [])
-            .map((raw) => BoxLabel.fromApi(raw as Map<String, dynamic>))
-            .toList(),
-      );
+  /// "Sok Dara 012 345 678", or just the name, or nothing at all. Built here
+  /// rather than in the sticker so the two printing paths cannot drift.
+  String get driver => [driverName, driverPhone]
+      .where((part) => part.isNotEmpty)
+      .join('  ');
+
+  /// Runs of whitespace collapse to one space.
+  ///
+  /// The ERP stores staff names with the honorific padded out to a fixed width
+  /// -- 'លោក        តៃ ម៉េងសុឺ' is what the server really sends -- which on a
+  /// 45 mm sticker spends most of the row on nothing and pushes the name off
+  /// the end. Harmless on a desktop, which is why it survived this long.
+  static final _runOfSpace = RegExp(r'\s+');
+
+  factory LabelSheet.fromApi(Map<String, dynamic> json) {
+    String text(String key) =>
+        ((json[key] as String?) ?? '').replaceAll(_runOfSpace, ' ').trim();
+    return LabelSheet(
+      invoiceNo: text('invoice_no'),
+      customer: text('customer'),
+      phone: text('phone'),
+      // All five are absent on an older server, and an empty line is the right
+      // answer there: the sticker simply does not show the row.
+      seller: text('seller'),
+      driverName: text('driver_name'),
+      driverPhone: text('driver_phone'),
+      publicUrl: text('public_url'),
+      labels: ((json['labels'] as List<dynamic>?) ?? const [])
+          .map((raw) => BoxLabel.fromApi(raw as Map<String, dynamic>))
+          .toList(),
+    );
+  }
 }

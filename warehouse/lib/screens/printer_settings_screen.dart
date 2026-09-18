@@ -101,6 +101,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     final l10n = AppLocalizations.of(context);
     setState(() => _testing = true);
     try {
+      // A test sticker that exercises every row, including the QR: a test that
+      // skipped it would come out clean and the first real label would not.
       final sticker = await renderStickerForPrinter(const BoxLabelSticker(
         label: BoxLabel(
             product: 'Test label',
@@ -112,6 +114,10 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
             quantity: 4),
         invoiceNo: 'TEST',
         customer: 'Printer check',
+        phone: '012 345 678',
+        seller: 'Seller name',
+        driver: 'Driver name',
+        qrData: 'https://yeaksa.com/shipment/test',
       ));
       final result = await widget.printer.printLabel(sticker);
       messenger.showSnackBar(SnackBar(
