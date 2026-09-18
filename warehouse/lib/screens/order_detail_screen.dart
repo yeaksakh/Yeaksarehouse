@@ -485,7 +485,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           invoiceNo: sheet.invoiceNo,
           customer: sheet.customer,
           phone: sheet.phone,
-          seller: sheet.seller,
+          company: sheet.company,
+          seller: sheet.sellerLine,
           driver: sheet.driver,
           qrData: sheet.publicUrl,
         ));

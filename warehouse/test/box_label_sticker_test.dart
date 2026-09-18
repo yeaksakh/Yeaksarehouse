@@ -32,16 +32,44 @@ void main() {
             invoiceNo: '2026-31549',
             customer: 'Depot Sen Sok',
             phone: '012 345 678',
-            seller: 'Pu Tha',
+            company: 'Depot Banteay Meanchey',
+            seller: 'Pu Tha  077 827 492',
             driver: 'Sok Dara  098 765 432',
             qrData: 'https://yeaksa.com/shipment/abc',
           ));
 
       expect(find.text('Depot Sen Sok'), findsOneWidget);
+      expect(find.text('Depot Banteay Meanchey'), findsOneWidget);
       // The marks are glyphs, not words, so the row costs the same in Khmer.
       expect(find.text('☎ 012 345 678'), findsOneWidget);
-      expect(find.text('★ Pu Tha'), findsOneWidget);
+      expect(find.text('★ Pu Tha  077 827 492'), findsOneWidget);
       expect(find.text('⚑ Sok Dara  098 765 432'), findsOneWidget);
+    });
+
+    testWidgets('the customer and the phone are the biggest rows',
+        (tester) async {
+      // A driver reads these at the gate. They are deliberately larger than the
+      // product and SKU above them, and a later tidy-up must not level them.
+      await pumpSticker(
+          tester,
+          const BoxLabelSticker(
+            label: _label,
+            invoiceNo: 'X',
+            customer: 'Depot Sen Sok',
+            phone: '012 345 678',
+            seller: 'Pu Tha  077 827 492',
+          ));
+
+      double sizeOf(Finder f) => tester.widget<Text>(f).style!.fontSize!;
+      final customer = sizeOf(find.text('Depot Sen Sok'));
+      final phone = sizeOf(find.text('☎ 012 345 678'));
+      final seller = sizeOf(find.text('★ Pu Tha  077 827 492'));
+      final sku = sizeOf(find.text('HEMA-4700'));
+
+      expect(customer, greaterThan(sku));
+      expect(phone, greaterThan(sku));
+      expect(seller, greaterThan(sku));
+      expect(customer, greaterThanOrEqualTo(phone));
     });
 
     testWidgets('the invoice, box and parcel counts are all shown',
@@ -82,6 +110,19 @@ void main() {
       expect(find.textContaining('★'), findsNothing);
       expect(find.textContaining('⚑'), findsNothing);
       expect(find.textContaining('☎'), findsNothing);
+    });
+
+    testWidgets('no company means no company row', (tester) async {
+      await pumpSticker(
+          tester,
+          const BoxLabelSticker(
+              label: _label,
+              invoiceNo: 'X',
+              customer: 'Depot Sen Sok',
+              phone: '012 345 678'));
+      // The customer's name, and nothing pretending to be a business under it.
+      expect(find.text('Depot Sen Sok'), findsOneWidget);
+      expect(find.text('Depot Banteay Meanchey'), findsNothing);
     });
   });
 
@@ -197,6 +238,8 @@ void main() {
         'customer': 'Depot Sen Sok',
         'phone': '012 345 678',
         'seller': 'Pu Tha',
+        'seller_phone': '077 827 492',
+        'company': 'Depot Banteay Meanchey',
         'driver_name': 'Sok Dara',
         'driver_phone': '098 765 432',
         'public_url': 'https://yeaksa.com/shipment/abc',
@@ -205,6 +248,8 @@ void main() {
       expect(sheet.customer, 'Depot Sen Sok');
       expect(sheet.phone, '012 345 678');
       expect(sheet.seller, 'Pu Tha');
+      expect(sheet.sellerLine, 'Pu Tha  077 827 492');
+      expect(sheet.company, 'Depot Banteay Meanchey');
       expect(sheet.driver, 'Sok Dara  098 765 432');
       expect(sheet.publicUrl, 'https://yeaksa.com/shipment/abc');
     });
@@ -232,6 +277,23 @@ void main() {
       expect(sheet.driver, '');
       expect(sheet.seller, '');
       expect(sheet.publicUrl, '');
+    });
+
+    test('a seller with no number on file is just a name', () {
+      // Only 323 of 16,898 users have a phone recorded, so this is the common
+      // case, not the edge one.
+      final sheet = LabelSheet.fromApi(const {
+        'seller': 'តៃ ម៉េងសុឺ',
+        'labels': <dynamic>[],
+      });
+      expect(sheet.sellerLine, 'តៃ ម៉េងសុឺ');
+    });
+
+    test('the server decides whether there is a company, not the app', () {
+      // `company_for` on the server already dropped the blank, duplicate and
+      // phone-number cases; the app prints what it is given.
+      final sheet = LabelSheet.fromApi(const {'labels': <dynamic>[]});
+      expect(sheet.company, '');
     });
   });
 }

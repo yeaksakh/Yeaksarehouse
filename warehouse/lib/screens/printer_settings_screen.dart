@@ -115,7 +115,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
         invoiceNo: 'TEST',
         customer: 'Printer check',
         phone: '012 345 678',
-        seller: 'Seller name',
+        company: 'Company name',
+        seller: 'Seller name  077 827 492',
         driver: 'Driver name',
         qrData: 'https://yeaksa.com/shipment/test',
       ));

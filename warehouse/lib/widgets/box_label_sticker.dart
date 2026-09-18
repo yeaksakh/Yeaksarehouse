@@ -27,6 +27,7 @@ class BoxLabelSticker extends StatelessWidget {
     required this.invoiceNo,
     required this.customer,
     this.phone = '',
+    this.company = '',
     this.seller = '',
     this.driver = '',
     this.qrData = '',
@@ -39,6 +40,10 @@ class BoxLabelSticker extends StatelessWidget {
   /// The customer's phone, under their name -- the number a driver rings from
   /// the gate. Blank rows take no space rather than leaving a gap.
   final String phone;
+
+  /// The customer's business, when there is a real one. Blank for most walk-in
+  /// sales, and a blank row takes no space.
+  final String company;
 
   /// Who sold it, and who is taking it -- the same two lines the website's
   /// sticker carries. Blank when the server did not send them, and a blank one
@@ -109,7 +114,7 @@ class BoxLabelSticker extends StatelessWidget {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: black.copyWith(
-                                    fontSize: 17, fontWeight: FontWeight.w700),
+                                    fontSize: 15, fontWeight: FontWeight.w700),
                               ),
                             ),
                             const SizedBox(width: 4),
@@ -119,7 +124,7 @@ class BoxLabelSticker extends StatelessWidget {
                             Text(
                               'x${label.quantityLabel}',
                               style: black.copyWith(
-                                  fontSize: 20, fontWeight: FontWeight.w900),
+                                  fontSize: 19, fontWeight: FontWeight.w900),
                             ),
                           ],
                         ),
@@ -127,21 +132,30 @@ class BoxLabelSticker extends StatelessWidget {
                           Text(label.sku,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: black.copyWith(fontSize: 14)),
+                              style: black.copyWith(fontSize: 12)),
                         const Spacer(),
+                        // Who the parcel is for, and who to ring: the rows a
+                        // driver reads at the gate, so they get the type size
+                        // and the product rows above give it up.
                         Text(customer,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: black.copyWith(
-                                fontSize: 15, fontWeight: FontWeight.w700)),
+                                fontSize: 19, fontWeight: FontWeight.w900)),
+                        if (company.isNotEmpty)
+                          Text(company,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: black.copyWith(
+                                  fontSize: 14, fontWeight: FontWeight.w700)),
                         // The marks are the website's own, so a packer holding
                         // one of each sticker reads the same rows.
                         if (phone.isNotEmpty)
-                          _Staff(mark: '\u260E', text: phone),
+                          _Staff(mark: '\u260E', text: phone, size: 18),
                         if (seller.isNotEmpty)
-                          _Staff(mark: '\u2605', text: seller),
+                          _Staff(mark: '\u2605', text: seller, size: 16),
                         if (driver.isNotEmpty)
-                          _Staff(mark: '\u2691', text: driver),
+                          _Staff(mark: '\u2691', text: driver, size: 13),
                       ],
                     ),
                   ),
@@ -180,10 +194,15 @@ class BoxLabelSticker extends StatelessWidget {
 /// every language -- the app runs in Khmer, and "Seller:" and "អ្នកលក់៖" are
 /// not the same width on a 45 mm sticker.
 class _Staff extends StatelessWidget {
-  const _Staff({required this.mark, required this.text});
+  const _Staff({required this.mark, required this.text, this.size = 13});
 
   final String mark;
   final String text;
+
+  /// The rows are not equally urgent. The customer's number is rung from the
+  /// gate, the seller's when something is wrong with the order, the driver's
+  /// least often -- so they are not all the same size.
+  final double size;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -191,7 +210,11 @@ class _Staff extends StatelessWidget {
         child: Text('$mark $text',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.black, height: 1.1, fontSize: 13)),
+            style: TextStyle(
+                color: Colors.black,
+                height: 1.1,
+                fontSize: size,
+                fontWeight: FontWeight.w700)),
       );
 }
 

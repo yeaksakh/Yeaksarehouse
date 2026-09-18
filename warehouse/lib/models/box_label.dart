@@ -66,7 +66,9 @@ class LabelSheet {
     required this.customer,
     required this.labels,
     this.phone = '',
+    this.company = '',
     this.seller = '',
+    this.sellerPhone = '',
     this.driverName = '',
     this.driverPhone = '',
     this.publicUrl = '',
@@ -78,10 +80,17 @@ class LabelSheet {
 
   final String phone;
 
+  /// The customer's business, when the ERP actually holds one. The server
+  /// decides that -- `shipment_labels.company_for` -- because the column it
+  /// comes from is blank, or a copy of the name, or a phone number on about
+  /// four rows in ten, and none of those are worth a line on a 45 mm sticker.
+  final String company;
+
   /// Who sold it and who is taking it. Both are on the website's sticker, so
   /// they are on this one: a parcel whose two labels disagree is a parcel
   /// somebody has to stop and ask about.
   final String seller;
+  final String sellerPhone;
   final String driverName;
   final String driverPhone;
 
@@ -94,9 +103,15 @@ class LabelSheet {
 
   /// "Sok Dara 012 345 678", or just the name, or nothing at all. Built here
   /// rather than in the sticker so the two printing paths cannot drift.
-  String get driver => [driverName, driverPhone]
-      .where((part) => part.isNotEmpty)
-      .join('  ');
+  String get driver => _withPhone(driverName, driverPhone);
+
+  /// "តៃ ម៉េងសុឺ 077827492", or just the name when there is no number.
+  String get sellerLine => _withPhone(seller, sellerPhone);
+
+  /// Two spaces, not one: on a printed label a single space between a name and
+  /// a number reads as one long string.
+  static String _withPhone(String name, String phone) =>
+      [name, phone].where((part) => part.isNotEmpty).join('  ');
 
   /// Runs of whitespace collapse to one space.
   ///
@@ -115,7 +130,9 @@ class LabelSheet {
       phone: text('phone'),
       // All five are absent on an older server, and an empty line is the right
       // answer there: the sticker simply does not show the row.
+      company: text('company'),
       seller: text('seller'),
+      sellerPhone: text('seller_phone'),
       driverName: text('driver_name'),
       driverPhone: text('driver_phone'),
       publicUrl: text('public_url'),
