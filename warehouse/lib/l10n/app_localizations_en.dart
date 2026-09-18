@@ -700,4 +700,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get serverUnreadable =>
       'The server sent something the app could not read.';
+
+  @override
+  String get printerLanguage => 'Printer language';
+
+  @override
+  String get printerLanguageBody =>
+      'A label printer and a till printer speak different languages. If nothing comes out of a label printer, this is almost always why.';
+
+  @override
+  String get labelPrinterTspl => 'Label printer (TSPL)';
+
+  @override
+  String get labelPrinterTsplBody =>
+      'Vigo, TSC, Xprinter and most sticker-roll machines';
+
+  @override
+  String get receiptPrinterEscPos => 'Receipt printer (ESC/POS)';
+
+  @override
+  String get receiptPrinterEscPosBody => 'Till printers on continuous paper';
+
+  @override
+  String get checkTheLanguage => 'Check the language';
+
+  @override
+  String get languageTestSent =>
+      'Sent. If a framed \"TSPL OK\" comes out, this printer speaks TSPL.';
 }

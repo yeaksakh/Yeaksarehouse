@@ -697,4 +697,32 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get serverUnreadable => 'ម៉ាស៊ីនមេបានផ្ញើអ្វីមួយដែលកម្មវិធីអានមិនបាន។';
+
+  @override
+  String get printerLanguage => 'ភាសាម៉ាស៊ីនបោះពុម្ព';
+
+  @override
+  String get printerLanguageBody =>
+      'ម៉ាស៊ីនបោះពុម្ពស្លាក និងម៉ាស៊ីនបោះពុម្ពវិក្កយបត្រ ប្រើភាសាខុសគ្នា។ បើគ្មានអ្វីចេញពីម៉ាស៊ីនបោះពុម្ពស្លាកទេ ភាគច្រើនគឺមកពីមូលហេតុនេះ។';
+
+  @override
+  String get labelPrinterTspl => 'ម៉ាស៊ីនបោះពុម្ពស្លាក (TSPL)';
+
+  @override
+  String get labelPrinterTsplBody =>
+      'Vigo, TSC, Xprinter និងម៉ាស៊ីនប្រើក្រដាសស្លាកភាគច្រើន';
+
+  @override
+  String get receiptPrinterEscPos => 'ម៉ាស៊ីនបោះពុម្ពវិក្កយបត្រ (ESC/POS)';
+
+  @override
+  String get receiptPrinterEscPosBody =>
+      'ម៉ាស៊ីនបោះពុម្ពវិក្កយបត្រប្រើក្រដាសវែង';
+
+  @override
+  String get checkTheLanguage => 'ពិនិត្យភាសា';
+
+  @override
+  String get languageTestSent =>
+      'បានផ្ញើ។ បើមាន \"TSPL OK\" ក្នុងស៊ុមចេញមក នោះម៉ាស៊ីននេះប្រើ TSPL។';
 }

@@ -480,12 +480,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       }
       var sent = 0;
       for (final label in sheet.labels) {
-        final png = await renderSticker(BoxLabelSticker(
+        final sticker = await renderStickerForPrinter(BoxLabelSticker(
           label: label,
           invoiceNo: sheet.invoiceNo,
           customer: sheet.customer,
         ));
-        final result = await printer.printImage(png);
+        final result = await printer.printLabel(sticker);
         if (!result.succeeded) {
           messenger.showSnackBar(SnackBar(
               content: Text('${result.message} '

@@ -1345,6 +1345,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The server sent something the app could not read.'**
   String get serverUnreadable;
+
+  /// No description provided for @printerLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Printer language'**
+  String get printerLanguage;
+
+  /// No description provided for @printerLanguageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A label printer and a till printer speak different languages. If nothing comes out of a label printer, this is almost always why.'**
+  String get printerLanguageBody;
+
+  /// No description provided for @labelPrinterTspl.
+  ///
+  /// In en, this message translates to:
+  /// **'Label printer (TSPL)'**
+  String get labelPrinterTspl;
+
+  /// No description provided for @labelPrinterTsplBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Vigo, TSC, Xprinter and most sticker-roll machines'**
+  String get labelPrinterTsplBody;
+
+  /// No description provided for @receiptPrinterEscPos.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt printer (ESC/POS)'**
+  String get receiptPrinterEscPos;
+
+  /// No description provided for @receiptPrinterEscPosBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Till printers on continuous paper'**
+  String get receiptPrinterEscPosBody;
+
+  /// No description provided for @checkTheLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the language'**
+  String get checkTheLanguage;
+
+  /// No description provided for @languageTestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent. If a framed \"TSPL OK\" comes out, this printer speaks TSPL.'**
+  String get languageTestSent;
 }
 
 class _AppLocalizationsDelegate

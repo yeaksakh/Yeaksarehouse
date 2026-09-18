@@ -269,5 +269,13 @@
   "discard": "Discard",
   "clear": "Clear",
   "countKeptOnDevice": "A count in progress is kept on this device, so it survives a restart.",
-  "serverUnreadable": "The server sent something the app could not read."
+  "serverUnreadable": "The server sent something the app could not read.",
+  "printerLanguage": "Printer language",
+  "printerLanguageBody": "A label printer and a till printer speak different languages. If nothing comes out of a label printer, this is almost always why.",
+  "labelPrinterTspl": "Label printer (TSPL)",
+  "labelPrinterTsplBody": "Vigo, TSC, Xprinter and most sticker-roll machines",
+  "receiptPrinterEscPos": "Receipt printer (ESC/POS)",
+  "receiptPrinterEscPosBody": "Till printers on continuous paper",
+  "checkTheLanguage": "Check the language",
+  "languageTestSent": "Sent. If a framed \"TSPL OK\" comes out, this printer speaks TSPL."
 }

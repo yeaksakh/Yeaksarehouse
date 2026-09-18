@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import '../models/box_label.dart';
+import '../services/label_bitmap.dart';
+import '../services/label_printer.dart';
 
 /// One 45 x 30 mm sticker, drawn for a thermal printer.
 ///
@@ -123,7 +125,35 @@ class BoxLabelSticker extends StatelessWidget {
 /// able to print six stickers without six of them flashing past on the phone,
 /// and a widget that is never laid out cannot be scrolled out of frame
 /// half-rendered.
+///
+/// This one is for the preview on screen. The printer wants
+/// [renderStickerMono]: a thermal head takes dots, not a PNG.
 Future<Uint8List> renderSticker(Widget sticker, {double pixelRatio = 1.0}) async {
+  final image = await _rasterise(sticker, pixelRatio);
+  final data = await image.toByteData(format: ui.ImageByteFormat.png);
+  return data!.buffer.asUint8List();
+}
+
+/// The same drawing in both the forms a printer might want, from one pass.
+///
+/// Always at pixelRatio 1: the sticker's dimensions ARE the printer's dots
+/// (360 x 240 for 45 x 30 mm at 8 dots/mm), so scaling it would either blur the
+/// text or run it off the edge of the label.
+Future<RenderedSticker> renderStickerForPrinter(Widget sticker) async {
+  final image = await _rasterise(sticker, 1.0);
+  final rgba = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+  final png = await image.toByteData(format: ui.ImageByteFormat.png);
+  return RenderedSticker(
+    mono: MonoBitmap.fromRgba(
+      rgba!.buffer.asUint8List(),
+      width: image.width,
+      height: image.height,
+    ),
+    png: png!.buffer.asUint8List(),
+  );
+}
+
+Future<ui.Image> _rasterise(Widget sticker, double pixelRatio) async {
   final boundary = RenderRepaintBoundary();
   final view = ui.PlatformDispatcher.instance.views.first;
 
@@ -154,7 +184,5 @@ Future<Uint8List> renderSticker(Widget sticker, {double pixelRatio = 1.0}) async
     ..flushCompositingBits()
     ..flushPaint();
 
-  final image = await boundary.toImage(pixelRatio: pixelRatio);
-  final data = await image.toByteData(format: ui.ImageByteFormat.png);
-  return data!.buffer.asUint8List();
+  return boundary.toImage(pixelRatio: pixelRatio);
 }

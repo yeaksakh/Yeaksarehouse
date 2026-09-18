@@ -28,6 +28,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   bool _loading = true;
   bool _testing = false;
   bool _bluetoothOff = false;
+  PrinterLanguage _language = PrinterLanguage.tspl;
 
   @override
   void initState() {
@@ -40,11 +41,13 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     final on = await widget.printer.isOn;
     final devices = on ? await widget.printer.devices() : <BluetoothDevice>[];
     final saved = await widget.printer.restore();
+    final language = await widget.printer.restoreLanguage();
     if (!mounted) return;
     setState(() {
       _bluetoothOff = !on;
       _devices = devices;
       _selected = saved;
+      _language = language;
       _loading = false;
     });
   }
@@ -62,6 +65,34 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
         content: Text(l10n.printerSaved(device.name ?? l10n.unnamedPrinter))));
   }
 
+  Future<void> _chooseLanguage(PrinterLanguage? language) async {
+    if (language == null) return;
+    await widget.printer.rememberLanguage(language);
+    if (!mounted) return;
+    setState(() => _language = language);
+  }
+
+  /// Ask the printer to prove it speaks TSPL, in TSPL's own drawing commands.
+  ///
+  /// Separate from [_testPrint] on purpose. If a sticker does not come out
+  /// there are two possible reasons -- wrong language, or a bad bitmap -- and
+  /// one button that tests both together cannot tell a packer which.
+  Future<void> _testLanguage() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
+    setState(() => _testing = true);
+    try {
+      final result = await widget.printer.printLanguageTest();
+      messenger.showSnackBar(SnackBar(
+        content: Text(result.succeeded
+            ? l10n.languageTestSent
+            : result.message ?? l10n.somethingWentWrong),
+      ));
+    } finally {
+      if (mounted) setState(() => _testing = false);
+    }
+  }
+
   /// Print one sticker so the packer can see it came out straight before they
   /// trust it with a parcel. Far cheaper than discovering the alignment is off
   /// after twelve boxes have gone out.
@@ -70,7 +101,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     final l10n = AppLocalizations.of(context);
     setState(() => _testing = true);
     try {
-      final png = await renderSticker(const BoxLabelSticker(
+      final sticker = await renderStickerForPrinter(const BoxLabelSticker(
         label: BoxLabel(
             product: 'Test label',
             sku: 'TEST-SKU',
@@ -82,7 +113,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
         invoiceNo: 'TEST',
         customer: 'Printer check',
       ));
-      final result = await widget.printer.printImage(png);
+      final result = await widget.printer.printLabel(sticker);
       messenger.showSnackBar(SnackBar(
         content: Text(result.succeeded
             ? l10n.testLabelSent
@@ -154,6 +185,38 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                             : null,
                       ),
                     ),
+                  const SizedBox(height: 16),
+                  Text(l10n.printerLanguage,
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  Text(l10n.printerLanguageBody,
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.outline,
+                          fontSize: 12)),
+                  const SizedBox(height: 8),
+                  Card(
+                    margin: EdgeInsets.zero,
+                    child: RadioGroup<PrinterLanguage>(
+                      groupValue: _language,
+                      onChanged: _chooseLanguage,
+                      child: const Column(children: [
+                        _LanguageTile(PrinterLanguage.tspl),
+                        _LanguageTile(PrinterLanguage.escPos),
+                      ]),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Its own test, separate from the sticker below: this one is
+                  // drawn by the printer's own commands, so it answers "does
+                  // this machine speak TSPL" even when the sticker does not come
+                  // out. Two different questions, two buttons.
+                  OutlinedButton.icon(
+                    onPressed: _selected == null || _testing
+                        ? null
+                        : _testLanguage,
+                    icon: const Icon(Icons.help_outline),
+                    label: Text(l10n.checkTheLanguage),
+                  ),
                   const SizedBox(height: 8),
                   FilledButton.icon(
                     onPressed:
@@ -178,6 +241,28 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                 ],
               ],
             ),
+    );
+  }
+}
+
+/// One row of the language picker.
+///
+/// A widget rather than two copies inline: the pair must stay identical apart
+/// from which language they name, and the titles come from the same place.
+class _LanguageTile extends StatelessWidget {
+  const _LanguageTile(this.language);
+
+  final PrinterLanguage language;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final isLabel = language == PrinterLanguage.tspl;
+    return RadioListTile<PrinterLanguage>(
+      value: language,
+      title: Text(isLabel ? l10n.labelPrinterTspl : l10n.receiptPrinterEscPos),
+      subtitle: Text(
+          isLabel ? l10n.labelPrinterTsplBody : l10n.receiptPrinterEscPosBody),
     );
   }
 }
