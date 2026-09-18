@@ -277,8 +277,5 @@
   "receiptPrinterEscPos": "Receipt printer (ESC/POS)",
   "receiptPrinterEscPosBody": "Till printers on continuous paper",
   "checkTheLanguage": "Check the language",
-  "languageTestSent": "Sent. If a framed \"TSPL OK\" comes out, this printer speaks TSPL.",
-  "stampAccepted": "Taken",
-  "stampPacked": "Packed",
-  "stampAudited": "Checked"
+  "languageTestSent": "Sent. If a framed \"TSPL OK\" comes out, this printer speaks TSPL."
 }

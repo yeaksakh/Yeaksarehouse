@@ -197,11 +197,9 @@ void main() {
             driver: 'A Driver With A Long Name  098 765 432',
             qrData:
                 'https://yeaksa.com/shipment/9f3c1a7be24d5801f2a9c3e7b1d45608',
-            stamps: [
-              LabelStamp('ទទួល', 'A Warehouse Person With A Very Long Name'),
-              LabelStamp('ខ្ចប់', 'Another Packer With A Very Long Name'),
-              LabelStamp('ពិនិត្យ', 'A Supervisor With A Very Long Name'),
-            ],
+            acceptedBy: 'A Warehouse Person With A Very Long Name',
+            packedBy: 'Another Packer With A Very Long Name',
+            auditedBy: 'A Supervisor With A Very Long Name',
           ));
 
       expect(tester.takeException(), isNull);
@@ -244,17 +242,18 @@ void main() {
             label: _label,
             invoiceNo: 'X',
             customer: 'Depot',
-            stamps: [
-              LabelStamp('ទទួល', 'តៃ ម៉េងសុឺ'),
-              LabelStamp('ខ្ចប់', 'សាត់ ស្រីពេជ្រ'),
-              LabelStamp('ពិនិត្យ', 'យ៉ន សុវណ្ណារ៉ា'),
-            ],
+            acceptedBy: 'តៃ ម៉េងសុឺ',
+            packedBy: 'សាត់ ស្រីពេជ្រ',
+            auditedBy: 'យ៉ន សុវណ្ណារ៉ា',
           ));
 
-      // The Khmer colon, not a Latin one -- the app runs in Khmer.
-      expect(find.text('ទទួល៖ តៃ ម៉េងសុឺ'), findsOneWidget);
-      expect(find.text('ខ្ចប់៖ សាត់ ស្រីពេជ្រ'), findsOneWidget);
-      expect(find.text('ពិនិត្យ៖ យ៉ន សុវណ្ណារ៉ា'), findsOneWidget);
+      // A name and an icon, with no worded label to translate or to pay for.
+      expect(find.text('តៃ ម៉េងសុឺ'), findsOneWidget);
+      expect(find.text('សាត់ ស្រីពេជ្រ'), findsOneWidget);
+      expect(find.text('យ៉ន សុវណ្ណារ៉ា'), findsOneWidget);
+      expect(find.byIcon(Icons.how_to_reg), findsOneWidget);
+      expect(find.byIcon(Icons.inventory_2), findsOneWidget);
+      expect(find.byIcon(Icons.verified), findsOneWidget);
     });
 
     testWidgets('a shipment nobody has touched yet prints no trail',
@@ -263,7 +262,9 @@ void main() {
           tester,
           const BoxLabelSticker(
               label: _label, invoiceNo: 'X', customer: 'Depot'));
-      expect(find.textContaining('៖'), findsNothing);
+      expect(find.byIcon(Icons.how_to_reg), findsNothing);
+      expect(find.byIcon(Icons.inventory_2), findsNothing);
+      expect(find.byIcon(Icons.verified), findsNothing);
     });
 
     testWidgets('the trail is the smallest thing on the sticker',
@@ -276,11 +277,11 @@ void main() {
             label: _label,
             invoiceNo: 'X',
             customer: 'Depot Sen Sok',
-            stamps: [LabelStamp('ទទួល', 'តៃ ម៉េងសុឺ')],
+            acceptedBy: 'តៃ ម៉េងសុឺ',
           ));
 
       double sizeOf(Finder f) => tester.widget<Text>(f).style!.fontSize!;
-      expect(sizeOf(find.text('ទទួល៖ តៃ ម៉េងសុឺ')),
+      expect(sizeOf(find.text('តៃ ម៉េងសុឺ')),
           lessThan(sizeOf(find.text('Depot Sen Sok'))));
     });
   });

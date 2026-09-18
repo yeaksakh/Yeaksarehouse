@@ -725,13 +725,4 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get languageTestSent =>
       'បានផ្ញើ។ បើមាន \"TSPL OK\" ក្នុងស៊ុមចេញមក នោះម៉ាស៊ីននេះប្រើ TSPL។';
-
-  @override
-  String get stampAccepted => 'ទទួល';
-
-  @override
-  String get stampPacked => 'ខ្ចប់';
-
-  @override
-  String get stampAudited => 'ពិនិត្យ';
 }

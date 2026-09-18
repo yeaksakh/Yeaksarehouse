@@ -31,7 +31,9 @@ class BoxLabelSticker extends StatelessWidget {
     this.seller = '',
     this.driver = '',
     this.qrData = '',
-    this.stamps = const [],
+    this.acceptedBy = '',
+    this.packedBy = '',
+    this.auditedBy = '',
   });
 
   final BoxLabel label;
@@ -56,14 +58,28 @@ class BoxLabelSticker extends StatelessWidget {
   /// printing a code that leads nowhere.
   final String qrData;
 
-  /// The warehouse trail along the bottom: taken by, packed by, checked by.
+  /// The warehouse trail: who took the order on, who packed it, who checked it.
   ///
-  /// Given as already-worded pairs rather than looked up here, because this
-  /// widget is rendered OFF-SCREEN by `renderStickerForPrinter`, with no
-  /// `MaterialApp` above it and therefore no `AppLocalizations` to read. The
-  /// call site has both, so it does the wording and this does the drawing.
-  /// Entries with an empty name are dropped by the caller.
-  final List<LabelStamp> stamps;
+  /// One line, an icon and a name each. The icon is what makes it fit -- a
+  /// worded label cost three to seven glyphs per stage, and three stages across
+  /// 344 dots left nothing for the names. It also means the row needs no
+  /// translation, which matters here: this widget is rendered OFF-SCREEN with no
+  /// `MaterialApp` above it, so `AppLocalizations.of` would have thrown.
+  ///
+  /// `accepted` is the WAREHOUSE taking the order on, not the rider taking the
+  /// parcel -- the stages run accepted, packed, audited, shipped, delivered.
+  final String acceptedBy;
+  final String packedBy;
+  final String auditedBy;
+
+  /// Blank stages are dropped, and the rest share the width between them, so a
+  /// parcel only one person has touched gives that name the whole line.
+  List<({IconData icon, String name})> get _trail => [
+        if (acceptedBy.isNotEmpty)
+          (icon: Icons.how_to_reg, name: acceptedBy),
+        if (packedBy.isNotEmpty) (icon: Icons.inventory_2, name: packedBy),
+        if (auditedBy.isNotEmpty) (icon: Icons.verified, name: auditedBy),
+      ];
 
   /// 45 x 30 mm at 8 dots/mm, the usual resolution of these machines: 360 x 240.
   /// Sent at exactly this size so the printer does not rescale and blur it.
@@ -191,16 +207,33 @@ class BoxLabelSticker extends StatelessWidget {
                 ],
               ),
             ),
-            if (stamps.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              // Full width, below the QR rather than beside it: three names in
-              // the 228-dot column would each be a handful of letters and an
-              // ellipsis, which names nobody.
-              for (final stamp in stamps)
-                Text('${stamp.label}\u17D6 ${stamp.name}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: black.copyWith(fontSize: 11)),
+            if (_trail.isNotEmpty) ...[
+              const SizedBox(height: 3),
+              // Full width, below the QR rather than beside it: the QR only
+              // occupies the top 112 dots of the body, and this row needs every
+              // one of the 344 across.
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  for (final stage in _trail)
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(stage.icon, size: 15, color: Colors.black),
+                          const SizedBox(width: 2),
+                          Expanded(
+                            child: Text(stage.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: black.copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700)),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ],
           ],
         ),
@@ -209,14 +242,6 @@ class BoxLabelSticker extends StatelessWidget {
   }
 }
 
-/// One line of the warehouse trail: a stage, and who did it.
-class LabelStamp {
-  const LabelStamp(this.label, this.name);
-
-  /// Already in the reader's language -- see [BoxLabelSticker.stamps].
-  final String label;
-  final String name;
-}
 
 /// One "who" row: a mark, then a name.
 ///

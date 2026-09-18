@@ -727,13 +727,4 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get languageTestSent =>
       'Sent. If a framed \"TSPL OK\" comes out, this printer speaks TSPL.';
-
-  @override
-  String get stampAccepted => 'Taken';
-
-  @override
-  String get stampPacked => 'Packed';
-
-  @override
-  String get stampAudited => 'Checked';
 }

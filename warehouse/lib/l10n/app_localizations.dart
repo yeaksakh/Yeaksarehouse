@@ -1393,24 +1393,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sent. If a framed \"TSPL OK\" comes out, this printer speaks TSPL.'**
   String get languageTestSent;
-
-  /// No description provided for @stampAccepted.
-  ///
-  /// In en, this message translates to:
-  /// **'Taken'**
-  String get stampAccepted;
-
-  /// No description provided for @stampPacked.
-  ///
-  /// In en, this message translates to:
-  /// **'Packed'**
-  String get stampPacked;
-
-  /// No description provided for @stampAudited.
-  ///
-  /// In en, this message translates to:
-  /// **'Checked'**
-  String get stampAudited;
 }
 
 class _AppLocalizationsDelegate
