@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:qr/qr.dart';
 import 'package:warehouse/models/box_label.dart';
 import 'package:warehouse/widgets/box_label_sticker.dart';
 import 'package:warehouse/widgets/label_qr.dart';
@@ -147,6 +148,26 @@ void main() {
           const BoxLabelSticker(
               label: _label, invoiceNo: 'X', customer: 'Depot'));
       expect(find.byType(LabelQr), findsNothing);
+    });
+
+    testWidgets('a real shipment URL gets a 3-dot module at the label size',
+        (tester) async {
+      // The number that decides whether this scans. A module must be a whole
+      // number of dots, so the size steps: at the old 112-dot box this same code
+      // came out at module 2 and only 90 dots drawn. If someone shrinks
+      // `qrDots` to win width back for the names, this fails and says why.
+      const url =
+          'https://yeaksa.com/shipment/eX1TBvcgqQpEpgCULNq5yK9y7lDB3-DwWKaewo0Y';
+      final image = QrImage(QrCode.fromData(
+          data: url, errorCorrectLevel: LabelQr.errorCorrection));
+      final across = image.moduleCount + LabelQr.quietModules * 2;
+      final module = (BoxLabelSticker.qrDots / across).floor();
+
+      expect(module, greaterThanOrEqualTo(3),
+          reason: 'a 2-dot module is 0.25 mm at 8 dots/mm, which scanners '
+              'read slowly or not at all off a thermal label');
+      // And the box wastes nothing: the drawn code fills it.
+      expect(module * across, BoxLabelSticker.qrDots);
     });
 
     testWidgets('its modules are a whole number of printer dots',

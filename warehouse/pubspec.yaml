@@ -1,7 +1,7 @@
 name: warehouse
 description: A warehouse floor app - move orders through the shop's fulfilment stages, and scan or count stock.
 publish_to: 'none'
-version: 1.6.0+17
+version: 1.7.0+18
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

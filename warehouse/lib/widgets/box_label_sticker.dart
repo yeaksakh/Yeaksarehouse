@@ -85,9 +85,21 @@ class BoxLabelSticker extends StatelessWidget {
   /// Sent at exactly this size so the printer does not rescale and blur it.
   static const Size dots = Size(360, 240);
 
-  /// 14 mm, matching the website's sticker. Big enough for a 3-dot module on a
-  /// URL-length code, which is what makes it scan first time -- see [LabelQr].
-  static const double qrDots = 112;
+  /// 135 dots -- about 17 mm -- and the number is not a taste.
+  ///
+  /// A QR's readability steps rather than slides, because a module has to be a
+  /// whole number of printer dots ([LabelQr] explains why). A shipment URL is 68
+  /// characters, which at error correction M is 37 modules, plus 4 quiet ones
+  /// each side: 45 across. So:
+  ///
+  ///     box 112 -> module 2, code DRAWN 90 dots  (22 wasted as centring)
+  ///     box 135 -> module 3, code drawn 135      (nothing wasted)
+  ///     box 180 -> module 4, code drawn 180      (too wide for the names)
+  ///
+  /// 135 is the next real step and the only size between 90 and 180 that wastes
+  /// nothing. Anything from 135 to 179 draws the same 135-dot code, so asking
+  /// for more would just take width off the customer's name for no gain.
+  static const double qrDots = 135;
 
   @override
   Widget build(BuildContext context) {
