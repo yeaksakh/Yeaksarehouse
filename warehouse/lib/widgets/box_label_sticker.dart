@@ -31,6 +31,7 @@ class BoxLabelSticker extends StatelessWidget {
     this.seller = '',
     this.driver = '',
     this.qrData = '',
+    this.stamps = const [],
   });
 
   final BoxLabel label;
@@ -54,6 +55,15 @@ class BoxLabelSticker extends StatelessWidget {
   /// The shipment's public page. Blank leaves the corner empty rather than
   /// printing a code that leads nowhere.
   final String qrData;
+
+  /// The warehouse trail along the bottom: taken by, packed by, checked by.
+  ///
+  /// Given as already-worded pairs rather than looked up here, because this
+  /// widget is rendered OFF-SCREEN by `renderStickerForPrinter`, with no
+  /// `MaterialApp` above it and therefore no `AppLocalizations` to read. The
+  /// call site has both, so it does the wording and this does the drawing.
+  /// Entries with an empty name are dropped by the caller.
+  final List<LabelStamp> stamps;
 
   /// 45 x 30 mm at 8 dots/mm, the usual resolution of these machines: 360 x 240.
   /// Sent at exactly this size so the printer does not rescale and blur it.
@@ -181,11 +191,31 @@ class BoxLabelSticker extends StatelessWidget {
                 ],
               ),
             ),
+            if (stamps.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              // Full width, below the QR rather than beside it: three names in
+              // the 228-dot column would each be a handful of letters and an
+              // ellipsis, which names nobody.
+              for (final stamp in stamps)
+                Text('${stamp.label}\u17D6 ${stamp.name}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: black.copyWith(fontSize: 11)),
+            ],
           ],
         ),
       ),
     );
   }
+}
+
+/// One line of the warehouse trail: a stage, and who did it.
+class LabelStamp {
+  const LabelStamp(this.label, this.name);
+
+  /// Already in the reader's language -- see [BoxLabelSticker.stamps].
+  final String label;
+  final String name;
 }
 
 /// One "who" row: a mark, then a name.

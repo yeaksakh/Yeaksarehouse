@@ -197,6 +197,11 @@ void main() {
             driver: 'A Driver With A Long Name  098 765 432',
             qrData:
                 'https://yeaksa.com/shipment/9f3c1a7be24d5801f2a9c3e7b1d45608',
+            stamps: [
+              LabelStamp('ទទួល', 'A Warehouse Person With A Very Long Name'),
+              LabelStamp('ខ្ចប់', 'Another Packer With A Very Long Name'),
+              LabelStamp('ពិនិត្យ', 'A Supervisor With A Very Long Name'),
+            ],
           ));
 
       expect(tester.takeException(), isNull);
@@ -231,6 +236,55 @@ void main() {
     });
   });
 
+  group('the warehouse trail', () {
+    testWidgets('each stage is printed with who did it', (tester) async {
+      await pumpSticker(
+          tester,
+          const BoxLabelSticker(
+            label: _label,
+            invoiceNo: 'X',
+            customer: 'Depot',
+            stamps: [
+              LabelStamp('ទទួល', 'តៃ ម៉េងសុឺ'),
+              LabelStamp('ខ្ចប់', 'សាត់ ស្រីពេជ្រ'),
+              LabelStamp('ពិនិត្យ', 'យ៉ន សុវណ្ណារ៉ា'),
+            ],
+          ));
+
+      // The Khmer colon, not a Latin one -- the app runs in Khmer.
+      expect(find.text('ទទួល៖ តៃ ម៉េងសុឺ'), findsOneWidget);
+      expect(find.text('ខ្ចប់៖ សាត់ ស្រីពេជ្រ'), findsOneWidget);
+      expect(find.text('ពិនិត្យ៖ យ៉ន សុវណ្ណារ៉ា'), findsOneWidget);
+    });
+
+    testWidgets('a shipment nobody has touched yet prints no trail',
+        (tester) async {
+      await pumpSticker(
+          tester,
+          const BoxLabelSticker(
+              label: _label, invoiceNo: 'X', customer: 'Depot'));
+      expect(find.textContaining('៖'), findsNothing);
+    });
+
+    testWidgets('the trail is the smallest thing on the sticker',
+        (tester) async {
+      // It is provenance, read later at a desk when something is queried --
+      // not at the gate. It must never take size from the customer row.
+      await pumpSticker(
+          tester,
+          const BoxLabelSticker(
+            label: _label,
+            invoiceNo: 'X',
+            customer: 'Depot Sen Sok',
+            stamps: [LabelStamp('ទទួល', 'តៃ ម៉េងសុឺ')],
+          ));
+
+      double sizeOf(Finder f) => tester.widget<Text>(f).style!.fontSize!;
+      expect(sizeOf(find.text('ទទួល៖ តៃ ម៉េងសុឺ')),
+          lessThan(sizeOf(find.text('Depot Sen Sok'))));
+    });
+  });
+
   group('LabelSheet reads the server', () {
     test('it takes the new fields', () {
       final sheet = LabelSheet.fromApi(const {
@@ -240,6 +294,9 @@ void main() {
         'seller': 'Pu Tha',
         'seller_phone': '077 827 492',
         'company': 'Depot Banteay Meanchey',
+        'accepted_by': 'Tai Meng Seu',
+        'packed_by': 'Sat Sreypich',
+        'audited_by': 'Yon Sovannara',
         'driver_name': 'Sok Dara',
         'driver_phone': '098 765 432',
         'public_url': 'https://yeaksa.com/shipment/abc',
@@ -252,6 +309,25 @@ void main() {
       expect(sheet.company, 'Depot Banteay Meanchey');
       expect(sheet.driver, 'Sok Dara  098 765 432');
       expect(sheet.publicUrl, 'https://yeaksa.com/shipment/abc');
+      expect(sheet.acceptedBy, 'Tai Meng Seu');
+      expect(sheet.packedBy, 'Sat Sreypich');
+      expect(sheet.auditedBy, 'Yon Sovannara');
+    });
+
+    test('the padding in a status-log name is collapsed too', () {
+      // Real: the log stores 'លោកស្រី    សាត់ ស្រីពេជ្រ'.
+      final sheet = LabelSheet.fromApi(const {
+        'packed_by': 'លោកស្រី    សាត់ ស្រីពេជ្រ',
+        'labels': <dynamic>[],
+      });
+      expect(sheet.packedBy, 'លោកស្រី សាត់ ស្រីពេជ្រ');
+    });
+
+    test('a stage nobody has done yet is empty, so its row is dropped', () {
+      final sheet = LabelSheet.fromApi(const {'labels': <dynamic>[]});
+      expect(sheet.acceptedBy, '');
+      expect(sheet.packedBy, '');
+      expect(sheet.auditedBy, '');
     });
 
     test('the padding the ERP puts in a staff name is collapsed', () {

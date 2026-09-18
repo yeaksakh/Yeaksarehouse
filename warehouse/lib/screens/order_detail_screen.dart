@@ -478,6 +478,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             SnackBar(content: Text(l10n.nothingToLabel)));
         return;
       }
+      // Worded here, where there IS an AppLocalizations; the sticker is drawn
+      // off-screen with no MaterialApp above it. Stages with nobody recorded are
+      // dropped rather than printed with a blank after the colon.
+      final stamps = <LabelStamp>[
+        if (sheet.acceptedBy.isNotEmpty)
+          LabelStamp(l10n.stampAccepted, sheet.acceptedBy),
+        if (sheet.packedBy.isNotEmpty)
+          LabelStamp(l10n.stampPacked, sheet.packedBy),
+        if (sheet.auditedBy.isNotEmpty)
+          LabelStamp(l10n.stampAudited, sheet.auditedBy),
+      ];
+
       var sent = 0;
       for (final label in sheet.labels) {
         final sticker = await renderStickerForPrinter(BoxLabelSticker(
@@ -489,6 +501,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           seller: sheet.sellerLine,
           driver: sheet.driver,
           qrData: sheet.publicUrl,
+          stamps: stamps,
         ));
         final result = await printer.printLabel(sticker);
         if (!result.succeeded) {

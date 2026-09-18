@@ -71,6 +71,9 @@ class LabelSheet {
     this.sellerPhone = '',
     this.driverName = '',
     this.driverPhone = '',
+    this.acceptedBy = '',
+    this.packedBy = '',
+    this.auditedBy = '',
     this.publicUrl = '',
   });
 
@@ -93,6 +96,15 @@ class LabelSheet {
   final String sellerPhone;
   final String driverName;
   final String driverPhone;
+
+  /// The warehouse trail: who took the order on, who packed it, who checked
+  /// it. `accepted` is the WAREHOUSE accepting the order, not the rider
+  /// accepting the delivery -- the stages run accepted, packed, audited,
+  /// shipped, delivered, and the rider appears at shipped. So these three do
+  /// not repeat the driver row.
+  final String acceptedBy;
+  final String packedBy;
+  final String auditedBy;
 
   /// What the QR carries -- the shipment's public page, the same URL the
   /// website's QR encodes, so a sticker printed from either scans to the same
@@ -133,6 +145,9 @@ class LabelSheet {
       company: text('company'),
       seller: text('seller'),
       sellerPhone: text('seller_phone'),
+      acceptedBy: text('accepted_by'),
+      packedBy: text('packed_by'),
+      auditedBy: text('audited_by'),
       driverName: text('driver_name'),
       driverPhone: text('driver_phone'),
       publicUrl: text('public_url'),

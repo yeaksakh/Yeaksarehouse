@@ -45,6 +45,11 @@ void main() {
         seller: 'តៃ ម៉េងសុឺ  077827492',
         driver: 'ពូ ថា  012-345-678',
         qrData: 'https://yeaksa.com/shipment/9f3c1a7be24d5801',
+        stamps: [
+          LabelStamp('ទទួល', 'លោក តៃ ម៉េងសុឺ'),
+          LabelStamp('ខ្ចប់', 'លោកស្រី សាត់ ស្រីពេជ្រ'),
+          LabelStamp('ពិនិត្យ', 'លោក យ៉ន សុវណ្ណារ៉ា'),
+        ],
       ),
       // Everything too long at once, which is how a sticker loses its last row.
       'overlong': const BoxLabelSticker(
@@ -63,6 +68,11 @@ void main() {
         seller: 'Salesperson With A Long Name  077 827 492',
         driver: 'Driver Name  098 765 432',
         qrData: 'https://yeaksa.com/shipment/9f3c1a7be24d5801',
+        stamps: [
+          LabelStamp('Taken', 'A Warehouse Person With A Long Name'),
+          LabelStamp('Packed', 'Another Packer With A Long Name Here'),
+          LabelStamp('Checked', 'A Supervisor With A Very Long Name'),
+        ],
       ),
       // An older server sends none of the new fields. No QR, no blank gap.
       'bare': const BoxLabelSticker(
