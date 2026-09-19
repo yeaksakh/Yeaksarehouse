@@ -52,7 +52,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String withStaff(String name) {
-    return 'With $name';
+    return 'Packer: $name';
   }
 
   @override
@@ -770,7 +770,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nextAccept => 'Accept to pack';
 
   @override
-  String get nextPack => 'Pack';
+  String get nextPack => 'Confirm packed';
 
   @override
   String get nextAudit => 'Audit';

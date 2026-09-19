@@ -14,7 +14,7 @@
   "notAccepted": "Not accepted",
   "collectCash": "Collect cash",
   "hasANote": "Has a note",
-  "withStaff": "With {name}",
+  "withStaff": "Packer: {name}",
   "@withStaff": {
     "placeholders": {
       "name": {
@@ -292,7 +292,7 @@
   "seeAllCount": "See all ({count})",
   "@seeAllCount": {"placeholders": {"count": {"type": "int"}}},
   "nextAccept": "Accept to pack",
-  "nextPack": "Pack",
+  "nextPack": "Confirm packed",
   "nextAudit": "Audit",
   "nothingToDoTitle": "Nothing to do",
   "nothingToDoBody": "New orders, packing and checks will appear here."

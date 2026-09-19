@@ -185,7 +185,7 @@ abstract class AppLocalizations {
   /// No description provided for @withStaff.
   ///
   /// In en, this message translates to:
-  /// **'With {name}'**
+  /// **'Packer: {name}'**
   String withStaff(String name);
 
   /// No description provided for @itemsCount.
@@ -1469,7 +1469,7 @@ abstract class AppLocalizations {
   /// No description provided for @nextPack.
   ///
   /// In en, this message translates to:
-  /// **'Pack'**
+  /// **'Confirm packed'**
   String get nextPack;
 
   /// No description provided for @nextAudit.

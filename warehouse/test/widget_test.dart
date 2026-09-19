@@ -178,7 +178,7 @@ void main() {
         of: find.ancestor(of: find.text(code), matching: find.byType(OrderTaskCard)),
         matching: find.widgetWithText(ElevatedButton, label));
     expect(buttonOn('YK-1', 'Accept to pack'), findsOneWidget);
-    expect(buttonOn('YK-2', 'Pack'), findsOneWidget);
+    expect(buttonOn('YK-2', 'Confirm packed'), findsOneWidget);
     expect(buttonOn('YK-3', 'Audit'), findsOneWidget); // signed in as a supervisor
     expect(find.descendant(
         of: find.ancestor(of: find.text('YK-4'), matching: find.byType(OrderTaskCard)),
@@ -287,7 +287,7 @@ void main() {
       buildOrder(id: '1', preparedById: 'x9', preparedByName: 'Chan Vy'),
     ]);
 
-    expect(find.text('With Chan Vy'), findsOneWidget);
+    expect(find.text('Packer: Chan Vy'), findsOneWidget);
     await openShipment(tester, 'YK-1');
 
     expect(find.text('Being packed by Chan Vy'), findsOneWidget);

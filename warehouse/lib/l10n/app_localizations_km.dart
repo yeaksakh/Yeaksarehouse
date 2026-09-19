@@ -52,7 +52,7 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String withStaff(String name) {
-    return 'ជាមួយ $name';
+    return 'អ្នកខ្ចប់៖ $name';
   }
 
   @override
@@ -765,10 +765,10 @@ class AppLocalizationsKm extends AppLocalizations {
   }
 
   @override
-  String get nextAccept => 'ទទួលខ្ចប់';
+  String get nextAccept => 'ទទួលយកទៅខ្ចប់';
 
   @override
-  String get nextPack => 'ខ្ចប់';
+  String get nextPack => 'បញ្ជាក់ខ្ចប់រួច';
 
   @override
   String get nextAudit => 'ត្រួតពិនិត្យ';

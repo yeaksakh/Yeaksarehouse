@@ -239,10 +239,15 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: scheme.primary,
           foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(52),
+          // Big on purpose (asked for 2026-09-19): every submit and print button
+          // -- Accept, Mark packed, Mark audited, Print labels, the Work board's
+          // next steps -- at 88px with 20pt text and a 30px icon, about three
+          // times the area of the old 52px/16pt.
+          minimumSize: const Size.fromHeight(88),
+          iconSize: 30,
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -253,9 +258,13 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(52),
+          // The print buttons are outlined: same size as the submit buttons.
+          minimumSize: const Size.fromHeight(88),
+          iconSize: 30,
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          side: BorderSide(color: scheme.primary, width: 2),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
