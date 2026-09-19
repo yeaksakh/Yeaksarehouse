@@ -55,9 +55,9 @@ class AppColors extends ThemeExtension<AppColors> {
   static const light = AppColors(
     page: Color(0xFFF3F5FA),
     card: Colors.white,
-    ordered: Color(0xFF2F5BEA),
-    prepared: Color(0xFFE08A00),
-    checked: Color(0xFF00A272),
+    ordered: Color(0xFFEA580C), // orange
+    prepared: Color(0xFF1F2937), // black (Packed)
+    checked: Color(0xFF166534), // dark green (Audited)
     pickedUp: Color(0xFF8B5CF6),
     delivered: Color(0xFF16A34A),
     cancelled: Color(0xFFE11D48),
@@ -72,11 +72,9 @@ class AppColors extends ThemeExtension<AppColors> {
     pay: Color(0xFF059669),
   );
 
-  /// Packed keeps the amber and Audited the green the warehouse's two stages
-  /// always had, so a colour means the same step it did before.
   /// Accepted by a packer and not yet packed: between Ordered and Packed.
-  /// Its own fuchsia -- no stage uses it -- so it never reads as Ordered's blue.
-  Color get packing => const Color(0xFFC026D3);
+  /// Blue: Ordered is orange, Packed black, Audited dark green.
+  Color get packing => const Color(0xFF2563EB);
 
   /// A card's colour: [forStage], except an Ordered one a packer has taken,
   /// which is Packing.
