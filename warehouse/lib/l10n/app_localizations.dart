@@ -1399,6 +1399,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sent. If a framed \"TSPL OK\" comes out, this printer speaks TSPL.'**
   String get languageTestSent;
+
+  /// No description provided for @ridersTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Riders'**
+  String get ridersTab;
+
+  /// No description provided for @riderStageAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get riderStageAccepted;
+
+  /// No description provided for @riderStagePickedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Picked up'**
+  String get riderStagePickedUp;
+
+  /// No description provided for @riderStageOnTheWay.
+  ///
+  /// In en, this message translates to:
+  /// **'On the way'**
+  String get riderStageOnTheWay;
+
+  /// No description provided for @riderStageDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get riderStageDelivered;
+
+  /// No description provided for @noRidersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No rider has an order'**
+  String get noRidersTitle;
+
+  /// No description provided for @noRidersBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipments a rider accepts appear here, with where they have got to.'**
+  String get noRidersBody;
 }
 
 class _AppLocalizationsDelegate

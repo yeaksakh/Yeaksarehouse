@@ -25,6 +25,9 @@ class TasksController extends ChangeNotifier {
   final Map<FulfilmentStage, List<Order>> _queues = {};
   final Map<FulfilmentStage, int> _counts = {};
   final Map<String, Order> _details = {};
+  List<Order>? _riders;
+  int? _ridersCount;
+  bool _ridersLoading = false;
   final Set<FulfilmentStage> _loading = {};
   bool _busy = false;
   String? _error;
@@ -46,6 +49,12 @@ class TasksController extends ChangeNotifier {
   int queueCount(FulfilmentStage stage) =>
       _counts[stage] ?? _queues[stage]?.length ?? 0;
 
+  /// The Riders tab: taken by a rider and not finished, or delivered today.
+  List<Order> get riders => List<Order>.unmodifiable(_riders ?? const <Order>[]);
+  bool get ridersLoaded => _riders != null;
+  bool get ridersLoading => _ridersLoading;
+  int get ridersCount => _ridersCount ?? _riders?.length ?? 0;
+
   int get toPackCount => queueCount(FulfilmentStage.ordered);
   int get packedCount => queueCount(FulfilmentStage.packed);
 
@@ -53,7 +62,7 @@ class TasksController extends ChangeNotifier {
   Order? orderById(String id) {
     final opened = _details[id];
     if (opened != null) return opened;
-    for (final list in _queues.values) {
+    for (final list in [..._queues.values, _riders ?? const <Order>[]]) {
       for (final order in list) {
         if (order.id == id) return order;
       }
@@ -80,6 +89,7 @@ class TasksController extends ChangeNotifier {
       _counts
         ..clear()
         ..addAll(page.counts);
+      _ridersCount = page.ridersCount ?? _ridersCount;
     } on ShipmentsException catch (failure) {
       _fail(failure);
     } finally {
@@ -94,6 +104,22 @@ class TasksController extends ChangeNotifier {
     _details.clear();
     for (final stage in kStaffQueues) {
       await load(stage);
+    }
+    await loadRiders();
+  }
+
+  Future<void> loadRiders() async {
+    _ridersLoading = true;
+    notifyListeners();
+    try {
+      final page = await _api.riders();
+      _riders = page.orders;
+      _ridersCount = page.ridersCount ?? page.orders.length;
+    } on ShipmentsException catch (failure) {
+      _fail(failure);
+    } finally {
+      _ridersLoading = false;
+      notifyListeners();
     }
   }
 

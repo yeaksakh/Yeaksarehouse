@@ -170,6 +170,16 @@ class FakeShipmentsApi extends ShipmentsApi {
     return ShipmentPage(orders: orders, counts: counts);
   }
 
+  /// The Riders tab: anything a rider has taken.
+  @override
+  Future<ShipmentPage> riders({int limit = 100}) async {
+    if (expired) {
+      throw ShipmentsException('This API token has expired.', status: 401);
+    }
+    final orders = _orders.values.where((order) => order.hasRider).toList();
+    return ShipmentPage(orders: orders, counts: const {}, ridersCount: orders.length);
+  }
+
   @override
   Future<Order> detail(String id) async => _find(id);
 

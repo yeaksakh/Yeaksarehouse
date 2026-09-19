@@ -186,6 +186,8 @@ class Order {
     this.auditedByName = '',
     this.riderName = '',
     this.riderPhone = '',
+    this.riderStage = '',
+    this.riderStageAt,
     this.lineCount = 0,
     this.packedCount = 0,
     this.totalQuantity = 0,
@@ -235,6 +237,11 @@ class Order {
   final String riderPhone;
 
   bool get hasRider => riderName.isNotEmpty;
+
+  /// The rider's latest step -- accepted, picked_up, on_the_way or delivered --
+  /// and when (null for accepted: the server records who, not when).
+  final String riderStage;
+  final DateTime? riderStageAt;
 
   final int lineCount;
   final int packedCount;
@@ -307,6 +314,8 @@ class Order {
       auditedByName: auditedByName,
       riderName: riderName,
       riderPhone: riderPhone,
+      riderStage: riderStage,
+      riderStageAt: riderStageAt,
       lineCount: lines == null ? lineCount : nextLines.length,
       packedCount: lines == null
           ? packedCount
@@ -349,6 +358,8 @@ class Order {
       auditedByName: _text(json['audited_by_name']) ?? '',
       riderName: rider is Map<String, dynamic> ? (_text(rider['name']) ?? '') : '',
       riderPhone: rider is Map<String, dynamic> ? (_text(rider['phone']) ?? '') : '',
+      riderStage: _text(json['rider_stage']) ?? '',
+      riderStageAt: _date(json['rider_stage_at']),
       lineCount: (json['line_count'] as num?)?.toInt() ?? 0,
       packedCount: (json['packed_count'] as num?)?.toInt() ?? 0,
       totalQuantity: (json['total_quantity'] as num?)?.toDouble() ?? 0,

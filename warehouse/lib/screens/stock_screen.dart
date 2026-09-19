@@ -26,6 +26,18 @@ class _StockScreenState extends State<StockScreen> {
   bool _scanning = false;
 
   @override
+  void initState() {
+    super.initState();
+    // The app loads stock at start-up, which can be before anyone has signed
+    // in; opening the tab with nothing (or an error) tries again.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final stock = context.read<StockController>();
+      if (!stock.loading && (stock.all.isEmpty || stock.error != null)) stock.load();
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();

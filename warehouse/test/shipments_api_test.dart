@@ -6,6 +6,7 @@ import 'package:http/testing.dart';
 import 'package:warehouse/data/shipments_api.dart';
 import 'package:warehouse/models/fulfilment_stage.dart';
 import 'package:warehouse/models/order.dart';
+import 'package:warehouse/models/stock_item.dart';
 
 /// One shipment, shaped exactly as `core/api/views_shipments.py` sends it.
 Map<String, dynamic> shipmentJson({bool withItems = false}) => {
@@ -243,6 +244,32 @@ void main() {
       api.list(FulfilmentStage.ordered),
       throwsShipments(message: contains('Could not reach the server')),
     );
+  });
+
+  test("a rider's latest step is read from the shipment", () {
+    final o = Order.fromApi({
+      ...shipmentJson(),
+      'rider': {'id': 29, 'name': 'Luon'},
+      'rider_stage': 'on_the_way',
+      'rider_stage_at': '2026-09-19T13:00:00+07:00',
+    });
+    expect(o.riderStage, 'on_the_way');
+    expect(o.riderStageAt, isNotNull);
+  });
+
+  test('a stock row from /api/stock keeps its exact quantity and place', () {
+    final item = StockItem.fromApi({
+      'product_id': 1, 'product': 'Soap', 'sku': 'S1', 'variation_id': 7,
+      'variation': 'DUMMY', 'sub_sku': 'S1-A', 'location_id': 3,
+      'qty_available': 53.59, 'location_name': 'Warehouse 41',
+      'alert_quantity': 10, 'rack': 'A', 'row': '2', 'position': null,
+    });
+    expect(item.id, '7@3');
+    expect(item.variant, isNull);
+    expect(item.onHandText, '53.59');
+    expect(item.onHand, 54);
+    expect(item.location, 'Warehouse 41 · A-2');
+    expect(item.reorderLevel, 10);
   });
 
   test('the rider who took it is read from the shipment', () {

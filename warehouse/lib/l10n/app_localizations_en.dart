@@ -732,4 +732,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get languageTestSent =>
       'Sent. If a framed \"TSPL OK\" comes out, this printer speaks TSPL.';
+
+  @override
+  String get ridersTab => 'Riders';
+
+  @override
+  String get riderStageAccepted => 'Accepted';
+
+  @override
+  String get riderStagePickedUp => 'Picked up';
+
+  @override
+  String get riderStageOnTheWay => 'On the way';
+
+  @override
+  String get riderStageDelivered => 'Delivered';
+
+  @override
+  String get noRidersTitle => 'No rider has an order';
+
+  @override
+  String get noRidersBody =>
+      'Shipments a rider accepts appear here, with where they have got to.';
 }

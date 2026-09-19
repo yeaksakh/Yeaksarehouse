@@ -104,6 +104,10 @@ class StockController extends ChangeNotifier {
       _error = null;
       notifyListeners();
       return true;
+    } on StockReadOnly catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
     } catch (_) {
       _error = 'That adjustment could not be saved.';
       notifyListeners();
@@ -184,6 +188,10 @@ class StockController extends ChangeNotifier {
       await _store?.saveCountDraft(null);
       notifyListeners();
       return true;
+    } on StockReadOnly catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
     } catch (_) {
       _error = 'That count could not be submitted.';
       notifyListeners();

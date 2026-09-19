@@ -117,7 +117,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                     Expanded(
                       child: _Figure(
                         label: l10n.onHand,
-                        value: '${item.onHand}',
+                        value: item.onHandText,
                       ),
                     ),
                     Expanded(
@@ -129,7 +129,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                     Expanded(
                       child: _Figure(
                         label: l10n.freeToSell,
-                        value: '${item.available}',
+                        value: item.availableText,
                         tone: tone,
                       ),
                     ),

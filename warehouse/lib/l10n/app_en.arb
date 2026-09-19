@@ -279,5 +279,12 @@
   "receiptPrinterEscPos": "Receipt printer (ESC/POS)",
   "receiptPrinterEscPosBody": "Till printers on continuous paper",
   "checkTheLanguage": "Check the language",
-  "languageTestSent": "Sent. If a framed \"TSPL OK\" comes out, this printer speaks TSPL."
+  "languageTestSent": "Sent. If a framed \"TSPL OK\" comes out, this printer speaks TSPL.",
+  "ridersTab": "Riders",
+  "riderStageAccepted": "Accepted",
+  "riderStagePickedUp": "Picked up",
+  "riderStageOnTheWay": "On the way",
+  "riderStageDelivered": "Delivered",
+  "noRidersTitle": "No rider has an order",
+  "noRidersBody": "Shipments a rider accepts appear here, with where they have got to."
 }

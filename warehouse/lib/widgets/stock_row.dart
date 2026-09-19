@@ -72,7 +72,7 @@ class StockRow extends StatelessWidget {
                 if (item.reserved > 0) ...[
                   const SizedBox(height: 3),
                   Text(
-                    '${item.onHand} on hand · ${item.reserved} reserved',
+                    '${item.onHandText} on hand · ${item.reserved} reserved',
                     style: TextStyle(
                       fontSize: 11.5,
                       color: scheme.onSurfaceVariant,
@@ -87,7 +87,7 @@ class StockRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${item.available}',
+                item.availableText,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,

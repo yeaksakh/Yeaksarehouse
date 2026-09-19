@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import '../models/fulfilment_stage.dart';
 import '../models/box_label.dart';
 import '../models/order.dart';
+import '../models/stock_item.dart';
 import '../state/server_config.dart';
 
 /// A shipment request that did not work, with a message fit to show as is.
@@ -30,10 +31,13 @@ class ShipmentsException implements Exception {
 
 /// One tab's worth of shipments, and how many sit at every status.
 class ShipmentPage {
-  const ShipmentPage({required this.orders, required this.counts});
+  const ShipmentPage({required this.orders, required this.counts, this.ridersCount});
 
   final List<Order> orders;
   final Map<FulfilmentStage, int> counts;
+
+  /// The Riders tab's count (`counts.riders`); null from an older server.
+  final int? ridersCount;
 }
 
 /// The website's /shipments page, for this app: `core/api/views_shipments.py`.
@@ -63,9 +67,16 @@ class ShipmentsApi {
   /// Not oldest first, although a queue is worked front to back: the live book
   /// holds thousands of `ordered` sales going back years that nobody will ever
   /// pack, and oldest first put those at the top of every shift.
-  Future<ShipmentPage> list(FulfilmentStage stage, {int limit = 100}) async {
+  Future<ShipmentPage> list(FulfilmentStage stage, {int limit = 100}) =>
+      _page(stage.apiValue, limit);
+
+  /// The Riders tab: shipments a rider has taken and not finished, plus the
+  /// ones delivered today, each with the rider's latest step.
+  Future<ShipmentPage> riders({int limit = 100}) => _page('riders', limit);
+
+  Future<ShipmentPage> _page(String status, int limit) async {
     final body = await _send('GET', '/api/shipments', query: {
-      'status': stage.apiValue,
+      'status': status,
       'limit': '$limit',
     });
     final counts = <FulfilmentStage, int>{};
@@ -82,7 +93,28 @@ class ShipmentsApi {
           ? rows.whereType<Map<String, dynamic>>().map(Order.fromApi).toList()
           : const [],
       counts: counts,
+      ridersCount: raw is Map && raw['riders'] is num
+          ? (raw['riders'] as num).toInt()
+          : null,
     );
+  }
+
+  /// The business's stock-tracked products with what is on hand at each branch,
+  /// from `GET /api/stock?tracked=1`, page by page (the server caps a page at 200).
+  Future<List<StockItem>> stock({int pageSize = 200, int max = 6000}) async {
+    final out = <StockItem>[];
+    for (var offset = 0; offset < max; offset += pageSize) {
+      final body = await _send('GET', '/api/stock', query: {
+        'tracked': '1',
+        'limit': '$pageSize',
+        'offset': '$offset',
+      });
+      final rows = body['data'];
+      if (rows is! List || rows.isEmpty) break;
+      out.addAll(rows.whereType<Map<String, dynamic>>().map(StockItem.fromApi));
+      if (rows.length < pageSize) break;
+    }
+    return out;
   }
 
   /// One shipment with its items, who packed each, and its photos.

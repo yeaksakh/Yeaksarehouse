@@ -216,5 +216,12 @@
   "receiptPrinterEscPos": "ម៉ាស៊ីនបោះពុម្ពវិក្កយបត្រ (ESC/POS)",
   "receiptPrinterEscPosBody": "ម៉ាស៊ីនបោះពុម្ពវិក្កយបត្រប្រើក្រដាសវែង",
   "checkTheLanguage": "ពិនិត្យភាសា",
-  "languageTestSent": "បានផ្ញើ។ បើមាន \"TSPL OK\" ក្នុងស៊ុមចេញមក នោះម៉ាស៊ីននេះប្រើ TSPL។"
+  "languageTestSent": "បានផ្ញើ។ បើមាន \"TSPL OK\" ក្នុងស៊ុមចេញមក នោះម៉ាស៊ីននេះប្រើ TSPL។",
+  "ridersTab": "អ្នកដឹក",
+  "riderStageAccepted": "បានទទួល",
+  "riderStagePickedUp": "បានយកទំនិញ",
+  "riderStageOnTheWay": "កំពុងដឹក",
+  "riderStageDelivered": "បានដល់",
+  "noRidersTitle": "មិនទាន់មានអ្នកដឹកកាន់កម្មង់",
+  "noRidersBody": "កម្មង់ដែលអ្នកដឹកបានទទួល នឹងបង្ហាញនៅទីនេះ ជាមួយស្ថានភាពចុងក្រោយ។"
 }

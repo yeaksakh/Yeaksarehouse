@@ -730,4 +730,26 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get languageTestSent =>
       'បានផ្ញើ។ បើមាន \"TSPL OK\" ក្នុងស៊ុមចេញមក នោះម៉ាស៊ីននេះប្រើ TSPL។';
+
+  @override
+  String get ridersTab => 'អ្នកដឹក';
+
+  @override
+  String get riderStageAccepted => 'បានទទួល';
+
+  @override
+  String get riderStagePickedUp => 'បានយកទំនិញ';
+
+  @override
+  String get riderStageOnTheWay => 'កំពុងដឹក';
+
+  @override
+  String get riderStageDelivered => 'បានដល់';
+
+  @override
+  String get noRidersTitle => 'មិនទាន់មានអ្នកដឹកកាន់កម្មង់';
+
+  @override
+  String get noRidersBody =>
+      'កម្មង់ដែលអ្នកដឹកបានទទួល នឹងបង្ហាញនៅទីនេះ ជាមួយស្ថានភាពចុងក្រោយ។';
 }

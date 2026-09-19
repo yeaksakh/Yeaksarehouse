@@ -16,7 +16,48 @@ class StockItem {
     this.reserved = 0,
     this.reorderLevel = 0,
     this.countedAt,
+    this.exactQty,
   });
+
+  /// The ERP's own number, which may be fractional (kg, litres); [onHand] is it
+  /// rounded for the counting maths. Null for local sample data.
+  final double? exactQty;
+
+  /// A row of `GET /api/stock` (mekhea-py core/api/views_core.py::stock).
+  factory StockItem.fromApi(Map<String, dynamic> json) {
+    String? text(Object? v) {
+      final s = v?.toString().trim();
+      return (s == null || s.isEmpty) ? null : s;
+    }
+    final qty = (json['qty_available'] as num?)?.toDouble() ?? 0;
+    final variation = text(json['variation']);
+    final shelf = [json['rack'], json['row'], json['position']]
+        .map(text)
+        .whereType<String>()
+        .join('-');
+    final place = [text(json['location_name']), if (shelf.isNotEmpty) shelf]
+        .whereType<String>()
+        .join(' · ');
+    return StockItem(
+      id: '${json['variation_id']}@${json['location_id']}',
+      sku: text(json['sub_sku']) ?? text(json['sku']) ?? '',
+      name: text(json['product']) ?? '',
+      variant: (variation == null || variation == 'DUMMY') ? null : variation,
+      barcode: text(json['sub_sku']),
+      location: place.isEmpty ? null : place,
+      onHand: qty.round(),
+      reorderLevel: ((json['alert_quantity'] as num?) ?? 0).round(),
+      exactQty: qty,
+    );
+  }
+
+  static String _qty(double v) =>
+      v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
+
+  /// What to print for on-hand / available: the ERP's exact number when known.
+  String get onHandText => exactQty != null ? _qty(exactQty!) : '$onHand';
+  String get availableText =>
+      exactQty != null ? _qty(exactQty! - reserved) : '$available';
 
   final String id;
   final String sku;

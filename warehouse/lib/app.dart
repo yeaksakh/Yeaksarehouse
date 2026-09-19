@@ -55,8 +55,6 @@ class WarehouseApp extends StatelessWidget {
     // A real run persists to the device. Tests inject a repository and leave
     // the store null, keeping them off the platform channel.
     final effectiveStore = store ?? (repository == null ? LocalStore() : null);
-    final effectiveRepository =
-        repository ?? WarehouseRepository(store: effectiveStore);
 
     return MultiProvider(
       providers: [
@@ -97,9 +95,20 @@ class WarehouseApp extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(
-          create: (_) =>
-              StockController(effectiveRepository, store: effectiveStore)
-                ..load(),
+          // The real app reads the ERP's stock (GET /api/stock); tests inject a
+          // repository with sample data.
+          create: (context) => StockController(
+            repository ??
+                WarehouseRepository(
+                  store: effectiveStore,
+                  remote: shipments ??
+                      ShipmentsApi(
+                        baseUrl: () => context.read<ServerConfig>().baseUrl,
+                        token: () => context.read<SessionController>().token,
+                      ),
+                ),
+            store: effectiveStore,
+          )..load(),
         ),
         ChangeNotifierProvider(
           create: (_) =>

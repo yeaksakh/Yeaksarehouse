@@ -2,6 +2,19 @@ import '../models/stock_count.dart';
 import '../models/stock_item.dart';
 import 'local_store.dart';
 import 'mock_data.dart';
+import 'shipments_api.dart';
+
+/// Stock changes from the phone are not wired to the ERP yet: an adjustment or
+/// a count must go through the website's stock adjustment, which posts the
+/// stock and accounting movements. Refused rather than faked on the device.
+class StockReadOnly implements Exception {
+  const StockReadOnly();
+  String get message =>
+      'Stock changes from the app are not connected to the ERP yet. '
+      'Use Stock Adjustment on the website.';
+  @override
+  String toString() => message;
+}
 
 /// Stock, still standing in for the network layer.
 ///
@@ -17,8 +30,14 @@ class WarehouseRepository {
   WarehouseRepository({
     List<StockItem>? initialStock,
     LocalStore? store,
-  })  : _stock = initialStock ?? MockData.seedStock(),
-        _store = store;
+    ShipmentsApi? remote,
+  })  : _stock = initialStock ?? (remote != null ? <StockItem>[] : MockData.seedStock()),
+        _store = store,
+        _remote = remote;
+
+  /// Set in the real app: stock is then the ERP's (`GET /api/stock`), read-only.
+  /// Null in tests and demo builds, which keep the local sample data.
+  final ShipmentsApi? _remote;
 
   final List<StockItem> _stock;
 
@@ -35,6 +54,14 @@ class WarehouseRepository {
   }
 
   Future<List<StockItem>> fetchStock() async {
+    final remote = _remote;
+    if (remote != null) {
+      final fresh = await remote.stock();
+      _stock
+        ..clear()
+        ..addAll(fresh);
+      return List<StockItem>.unmodifiable(_stock);
+    }
     await _hydrate();
     await _pause();
     return List<StockItem>.unmodifiable(_stock);
@@ -50,6 +77,7 @@ class WarehouseRepository {
     int delta,
     StockChangeReason reason,
   ) async {
+    if (_remote != null) throw const StockReadOnly();
     await _pause();
     final item = _findStock(stockItemId);
     item.onHand = (item.onHand + delta).clamp(0, 1 << 31);
@@ -61,6 +89,7 @@ class WarehouseRepository {
   /// Set an item's on-hand outright. Used when submitting a count, where the
   /// counted number *is* the truth rather than a correction to it.
   Future<StockItem> setOnHand(String stockItemId, int onHand) async {
+    if (_remote != null) throw const StockReadOnly();
     final item = _findStock(stockItemId);
     item.onHand = onHand < 0 ? 0 : onHand;
     item.countedAt = DateTime.now();
@@ -71,7 +100,11 @@ class WarehouseRepository {
   /// Look an item up by barcode, falling back to SKU. Null when nothing matches
   /// -- which the scan sheet reports rather than silently doing nothing.
   Future<StockItem?> findByCode(String code) async {
-    await _hydrate();
+    if (_remote != null) {
+      if (_stock.isEmpty) await fetchStock();
+    } else {
+      await _hydrate();
+    }
     for (final item in _stock) {
       if (item.matchesCode(code)) return item;
     }
@@ -82,6 +115,7 @@ class WarehouseRepository {
   /// Uncounted lines are left alone -- skipping a line is not the same as
   /// finding nothing there.
   Future<List<StockItem>> submitCount(StockCount count) async {
+    if (_remote != null) throw const StockReadOnly();
     await _pause();
     for (final line in count.lines) {
       final counted = line.counted;
