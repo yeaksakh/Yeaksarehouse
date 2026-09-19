@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 import '../models/fulfilment_stage.dart';
+import '../models/order.dart';
 
 /// Colours the Material scheme does not cover: the page/card split the app is
 /// built on, the per-stage accents, the three stock signals, and an accent for
@@ -74,7 +75,15 @@ class AppColors extends ThemeExtension<AppColors> {
   /// Packed keeps the amber and Audited the green the warehouse's two stages
   /// always had, so a colour means the same step it did before.
   /// Accepted by a packer and not yet packed: between Ordered and Packed.
-  Color get packing => Color.lerp(ordered, prepared, 0.5)!;
+  /// Its own fuchsia -- no stage uses it -- so it never reads as Ordered's blue.
+  Color get packing => const Color(0xFFC026D3);
+
+  /// A card's colour: [forStage], except an Ordered one a packer has taken,
+  /// which is Packing.
+  Color forOrder(Order order) =>
+      order.stage == FulfilmentStage.ordered && order.isAccepted
+          ? packing
+          : forStage(order.stage);
 
   Color forStage(FulfilmentStage stage) => switch (stage) {
         FulfilmentStage.ordered => ordered,

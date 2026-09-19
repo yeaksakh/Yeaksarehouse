@@ -195,7 +195,7 @@ class _WorkBoard extends StatelessWidget {
     }
 
     Widget? nextStep(Order order) {
-      final color = colors.forStage(order.stage);
+      final color = colors.forOrder(order);
       ButtonStyle style() => ElevatedButton.styleFrom(
           backgroundColor: color, foregroundColor: Colors.white);
       switch (order.stage) {

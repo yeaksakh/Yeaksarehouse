@@ -44,7 +44,7 @@ class OrderTaskCard extends StatelessWidget {
 
     return SectionCard(
       onTap: onTap,
-      accent: colors.forStage(order.stage),
+      accent: colors.forOrder(order),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -107,7 +107,7 @@ class OrderTaskCard extends StatelessWidget {
                   minHeight: 6,
                   backgroundColor: scheme.surfaceContainerHighest,
                   valueColor:
-                      AlwaysStoppedAnimation(colors.forStage(order.stage)),
+                      AlwaysStoppedAnimation(colors.forOrder(order)),
                 ),
               ),
             ),
