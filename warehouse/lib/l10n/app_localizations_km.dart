@@ -752,4 +752,31 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get noRidersBody =>
       'កម្មង់ដែលអ្នកដឹកបានទទួល នឹងបង្ហាញនៅទីនេះ ជាមួយស្ថានភាពចុងក្រោយ។';
+
+  @override
+  String get workTab => 'ការងារ';
+
+  @override
+  String get historyTab => 'ប្រវត្តិ';
+
+  @override
+  String seeAllCount(int count) {
+    return 'មើលទាំងអស់ ($count)';
+  }
+
+  @override
+  String get nextAccept => 'ទទួលខ្ចប់';
+
+  @override
+  String get nextPack => 'ខ្ចប់';
+
+  @override
+  String get nextAudit => 'ត្រួតពិនិត្យ';
+
+  @override
+  String get nothingToDoTitle => 'មិនមានការងារទេ';
+
+  @override
+  String get nothingToDoBody =>
+      'កម្មង់ថ្មី ការខ្ចប់ និងការត្រួតពិនិត្យ នឹងបង្ហាញនៅទីនេះ។';
 }

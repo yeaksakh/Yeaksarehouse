@@ -286,5 +286,14 @@
   "riderStageOnTheWay": "On the way",
   "riderStageDelivered": "Delivered",
   "noRidersTitle": "No rider has an order",
-  "noRidersBody": "Shipments a rider accepts appear here, with where they have got to."
+  "noRidersBody": "Shipments a rider accepts appear here, with where they have got to.",
+  "workTab": "Work",
+  "historyTab": "History",
+  "seeAllCount": "See all ({count})",
+  "@seeAllCount": {"placeholders": {"count": {"type": "int"}}},
+  "nextAccept": "Accept to pack",
+  "nextPack": "Pack",
+  "nextAudit": "Audit",
+  "nothingToDoTitle": "Nothing to do",
+  "nothingToDoBody": "New orders, packing and checks will appear here."
 }

@@ -20,9 +20,14 @@ class OrderTaskCard extends StatelessWidget {
     required this.order,
     this.staffId,
     this.onTap,
+    this.action,
   });
 
   final Order order;
+
+  /// The next step as a button under the card (Accept, Pack, Audit) -- the Work
+  /// board passes one; the full per-stage lists do not.
+  final Widget? action;
 
   /// Who is signed in, so the card can say "Yours" rather than their own name.
   final String? staffId;
@@ -149,6 +154,10 @@ class OrderTaskCard extends StatelessWidget {
                 ),
             ],
           ),
+          if (action != null) ...[
+            const SizedBox(height: 12),
+            SizedBox(width: double.infinity, child: action!),
+          ],
         ],
       ),
     );

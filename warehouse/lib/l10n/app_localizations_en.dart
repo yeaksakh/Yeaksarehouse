@@ -754,4 +754,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noRidersBody =>
       'Shipments a rider accepts appear here, with where they have got to.';
+
+  @override
+  String get workTab => 'Work';
+
+  @override
+  String get historyTab => 'History';
+
+  @override
+  String seeAllCount(int count) {
+    return 'See all ($count)';
+  }
+
+  @override
+  String get nextAccept => 'Accept to pack';
+
+  @override
+  String get nextPack => 'Pack';
+
+  @override
+  String get nextAudit => 'Audit';
+
+  @override
+  String get nothingToDoTitle => 'Nothing to do';
+
+  @override
+  String get nothingToDoBody =>
+      'New orders, packing and checks will appear here.';
 }

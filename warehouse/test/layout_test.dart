@@ -123,27 +123,36 @@ Future<void> openTab(WidgetTester tester, IconData icon) async {
 }
 
 Future<void> openQueue(WidgetTester tester, String label) async {
+  // Every warehouse stage sits on the Work board now (laid out like YeaksaBoy);
+  // `label` is the stage whose section the caller wants.
   await tester.tap(
-    find.descendant(of: find.byType(TabBar), matching: find.text(label)),
+    find.descendant(of: find.byType(TabBar), matching: find.text('Work')),
   );
+  await tester.pumpAndSettle();
+  final section = find.text(label);
+  if (section.evaluate().isNotEmpty) await tester.ensureVisible(section.first);
   await tester.pumpAndSettle();
 }
 
 void main() {
   testWidgets('the shipment tabs fit a small phone', (tester) async {
     await pumpAt(tester, _smallPhone);
-    expect(
-      find.descendant(of: find.byType(TabBar), matching: find.text('Ordered')),
-      findsOneWidget,
-    );
+    for (final tab in ['Work', 'History']) {
+      expect(
+        find.descendant(of: find.byType(TabBar), matching: find.text(tab)),
+        findsOneWidget,
+      );
+    }
   });
 
   testWidgets('each tab lays out on a small phone', (tester) async {
     await pumpAt(tester, _smallPhone);
 
-    for (final label in ['Packed', 'Audited', 'Ordered']) {
-      await openQueue(tester, label);
-    }
+    await tester.drag(find.byType(ListView).first, const Offset(0, -1500));
+    await tester.pumpAndSettle();
+    await tester.tap(
+        find.descendant(of: find.byType(TabBar), matching: find.text('History')));
+    await tester.pumpAndSettle();
   });
 
   testWidgets('a shipment being packed lays out on a small phone',

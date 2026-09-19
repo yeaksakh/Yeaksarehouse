@@ -1441,6 +1441,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shipments a rider accepts appear here, with where they have got to.'**
   String get noRidersBody;
+
+  /// No description provided for @workTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get workTab;
+
+  /// No description provided for @historyTab.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historyTab;
+
+  /// No description provided for @seeAllCount.
+  ///
+  /// In en, this message translates to:
+  /// **'See all ({count})'**
+  String seeAllCount(int count);
+
+  /// No description provided for @nextAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept to pack'**
+  String get nextAccept;
+
+  /// No description provided for @nextPack.
+  ///
+  /// In en, this message translates to:
+  /// **'Pack'**
+  String get nextPack;
+
+  /// No description provided for @nextAudit.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit'**
+  String get nextAudit;
+
+  /// No description provided for @nothingToDoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to do'**
+  String get nothingToDoTitle;
+
+  /// No description provided for @nothingToDoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'New orders, packing and checks will appear here.'**
+  String get nothingToDoBody;
 }
 
 class _AppLocalizationsDelegate

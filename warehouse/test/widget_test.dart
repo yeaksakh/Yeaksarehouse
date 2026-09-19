@@ -4,6 +4,7 @@ import 'package:warehouse/app.dart';
 import 'package:warehouse/models/fulfilment_stage.dart';
 import 'package:warehouse/models/hrm.dart';
 import 'package:warehouse/models/order.dart';
+import 'package:warehouse/widgets/order_task_card.dart';
 import 'package:warehouse/services/camera.dart';
 import 'package:warehouse/services/location.dart';
 
@@ -56,9 +57,14 @@ Future<void> openTab(WidgetTester tester, IconData icon) async {
 /// Taps a shipment tab by its label. Scoped to the TabBar: the same word is on
 /// the status chip of every card in that tab.
 Future<void> openQueue(WidgetTester tester, String label) async {
+  // Every warehouse stage sits on the Work board now (laid out like YeaksaBoy);
+  // `label` is the stage whose section the caller wants.
   await tester.tap(
-    find.descendant(of: find.byType(TabBar), matching: find.text(label)),
+    find.descendant(of: find.byType(TabBar), matching: find.text('Work')),
   );
+  await tester.pumpAndSettle();
+  final section = find.text(label);
+  if (section.evaluate().isNotEmpty) await tester.ensureVisible(section.first);
   await tester.pumpAndSettle();
 }
 
@@ -121,26 +127,62 @@ void main() {
     expect(find.text('Enter your password.'), findsOneWidget);
   });
 
-  testWidgets("signing in lands on the website's three shipment tabs",
+  testWidgets('signing in lands on the Work board, laid out like YeaksaBoy',
       (tester) async {
     await signIn(tester);
 
-    for (final label in ['Ordered', 'Packed', 'Audited']) {
+    for (final tab in ['Work', 'History']) {
       expect(
-        find.descendant(of: find.byType(TabBar), matching: find.text(label)),
+        find.descendant(of: find.byType(TabBar), matching: find.text(tab)),
         findsOneWidget,
       );
     }
+    expect(find.text('Ordered'), findsWidgets); // the stage heading
     expect(find.text('YK-1'), findsOneWidget);
     expect(find.text('Not accepted'), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, 'Accept to pack'), findsWidgets);
   });
 
-  testWidgets('an empty tab says so in its own words', (tester) async {
+  testWidgets('empty stages are left out; nothing at all says so',
+      (tester) async {
     await signIn(tester, orders: [
       buildOrder(id: '1', stage: FulfilmentStage.audited),
     ]);
+    expect(find.text('Audited'), findsWidgets);
+    expect(find.text('Ordered'), findsNothing);
+    expect(find.text('Waiting for the rider'), findsOneWidget);
+  });
 
-    expect(find.text('Nothing to pack'), findsOneWidget);
+  testWidgets('an empty board says there is nothing to do', (tester) async {
+    await signIn(tester, orders: const []);
+    expect(find.text('Nothing to do'), findsOneWidget);
+  });
+
+  testWidgets('stages top to bottom, each card with its own next step',
+      (tester) async {
+    tester.view.physicalSize = const Size(420 * 3, 4000 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await signIn(tester, orders: [
+      buildOrder(id: '4', stage: FulfilmentStage.audited),
+      buildOrder(id: '3', stage: FulfilmentStage.packed,
+          lines: [buildLine(quantity: 1, packed: true)]),
+      buildOrder(id: '2', stage: FulfilmentStage.ordered, preparedById: supervisor.id),
+      buildOrder(id: '1', stage: FulfilmentStage.ordered),
+    ]);
+    double y(String text) => tester.getTopLeft(find.text(text).first).dy;
+    expect(y('Ordered') < y('Packed'), isTrue);
+    expect(y('Packed') < y('Audited'), isTrue);
+
+    Finder buttonOn(String code, String label) => find.descendant(
+        of: find.ancestor(of: find.text(code), matching: find.byType(OrderTaskCard)),
+        matching: find.widgetWithText(ElevatedButton, label));
+    expect(buttonOn('YK-1', 'Accept to pack'), findsOneWidget);
+    expect(buttonOn('YK-2', 'Pack'), findsOneWidget);
+    expect(buttonOn('YK-3', 'Audit'), findsOneWidget); // signed in as a supervisor
+    expect(find.descendant(
+        of: find.ancestor(of: find.text('YK-4'), matching: find.byType(OrderTaskCard)),
+        matching: find.text('Waiting for the rider')), findsOneWidget);
   });
 
   testWidgets('a shipment nobody has accepted offers Accept, and no ticking',
