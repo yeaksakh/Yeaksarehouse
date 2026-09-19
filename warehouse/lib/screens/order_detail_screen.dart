@@ -584,7 +584,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     if (stage == FulfilmentStage.ordered) return const [];
 
     if (stage == FulfilmentStage.packed) {
-      if (staff != null && staff.role.canCheck) {
+      if (staff != null && staff.canAudit) {
         return [
           ElevatedButton.icon(
             onPressed: waiting

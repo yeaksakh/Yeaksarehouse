@@ -42,7 +42,16 @@ class Staff {
     required this.warehouseName,
     this.username,
     this.currencySymbol = r'$',
+    this.auditGranted = false,
   });
+
+  /// The server's `can_audit`: the role has Roles > Shipments > Audit shipment.
+  /// A packer with it may audit without being made a supervisor (which would
+  /// also hand them stock changes).
+  final bool auditGranted;
+
+  /// May mark a packed shipment audited.
+  bool get canAudit => role.canCheck || auditGranted;
 
   /// The shop's currency, for the payslip.
   final String currencySymbol;
@@ -75,6 +84,7 @@ class Staff {
         'warehouseName': warehouseName,
         'username': username,
         'currencySymbol': currencySymbol,
+        'auditGranted': auditGranted,
       };
 
   factory Staff.fromJson(Map<String, dynamic> json) => Staff(
@@ -84,5 +94,6 @@ class Staff {
         warehouseName: json['warehouseName'] as String,
         username: json['username'] as String?,
         currencySymbol: json['currencySymbol'] as String? ?? r'$',
+        auditGranted: json['auditGranted'] == true,
       );
 }

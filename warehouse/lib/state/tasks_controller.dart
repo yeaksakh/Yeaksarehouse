@@ -135,7 +135,7 @@ class TasksController extends ChangeNotifier {
 
   /// A second pair of eyes on a packed shipment, so it is a supervisor's.
   Future<bool> markAudited(String id, {required Staff staff}) async {
-    if (!staff.role.canCheck) {
+    if (!staff.canAudit) {
       _error = 'Only a supervisor can mark a shipment audited.';
       notifyListeners();
       return false;

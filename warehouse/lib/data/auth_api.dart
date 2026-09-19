@@ -146,6 +146,8 @@ Staff staffFromLogin(Map<String, dynamic> data) {
     id: '${user['id']}',
     name: (name == null || name.isEmpty) ? (username ?? 'Staff') : name,
     role: data['is_admin'] == true ? StaffRole.supervisor : StaffRole.packer,
+    // Roles > Shipments > Audit shipment. Absent on an older server = false.
+    auditGranted: data['can_audit'] == true,
     warehouseName: (business['name'] as String?) ?? '',
     username: username,
     currencySymbol: (business['symbol'] as String?)?.trim().isNotEmpty == true

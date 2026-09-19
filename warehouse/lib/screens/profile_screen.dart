@@ -138,7 +138,7 @@ class ProfileScreen extends StatelessWidget {
                 const Divider(height: 22),
                 _Permission(
                   label: l10n.markShipmentsAudited,
-                  granted: staff.role.canCheck,
+                  granted: staff.canAudit,
                 ),
                 const Divider(height: 22),
                 _Permission(

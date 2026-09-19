@@ -73,6 +73,22 @@ void main() {
     expect(staff.staff.role, StaffRole.packer);
   });
 
+  test('a packer whose role may audit can audit, and still not change stock', () {
+    final data = loginAnswer()['data'] as Map<String, dynamic>;
+    final staff = staffFromLogin({...data, 'can_audit': true});
+    expect(staff.role, StaffRole.packer);
+    expect(staff.canAudit, isTrue);
+    expect(staff.role.canAdjustStock, isFalse);
+    // survives the saved session
+    expect(Staff.fromJson(staff.toJson()).canAudit, isTrue);
+  });
+
+  test('no can_audit (an older server) means a packer cannot audit', () {
+    final data = loginAnswer()['data'] as Map<String, dynamic>;
+    expect(staffFromLogin(data).canAudit, isFalse);
+    expect(staffFromLogin({...data, 'is_admin': true}).canAudit, isTrue);
+  });
+
   test('a blank name falls back to the username', () {
     final data = loginAnswer(name: ' ')['data'] as Map<String, dynamic>;
     expect(staffFromLogin(data).name, 'sokha');
