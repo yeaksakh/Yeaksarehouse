@@ -245,6 +245,21 @@ void main() {
     );
   });
 
+  test('the rider who took it is read from the shipment', () {
+    final taken = Order.fromApi({
+      ...shipmentJson(),
+      'rider': {'id': 29, 'name': 'Luon Vileas', 'phone': '0975970074'},
+    });
+    expect(taken.hasRider, isTrue);
+    expect(taken.riderName, 'Luon Vileas');
+    expect(taken.riderPhone, '0975970074');
+
+    final waiting = Order.fromApi({...shipmentJson(), 'rider': null});
+    expect(waiting.hasRider, isFalse);
+    // an older server sends no field at all
+    expect(Order.fromApi(shipmentJson()).hasRider, isFalse);
+  });
+
   test('an unknown status in a row falls back rather than failing the list',
       () {
     final order = Order.fromApi({...shipmentJson(), 'shipping_status': null});

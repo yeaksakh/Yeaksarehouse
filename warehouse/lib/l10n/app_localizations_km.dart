@@ -362,6 +362,11 @@ class AppLocalizationsKm extends AppLocalizations {
   }
 
   @override
+  String riderName(String name) {
+    return 'អ្នកដឹកជញ្ជូន៖ $name';
+  }
+
+  @override
   String auditedByName(String name) {
     return 'ត្រួតពិនិត្យដោយ $name';
   }

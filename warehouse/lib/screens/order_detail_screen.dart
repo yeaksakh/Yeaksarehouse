@@ -211,6 +211,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         ' · ${dateTime(order.auditedAt!)}',
                   ),
                 ],
+                // Who took it from here -- a rider who accepted it in YeaksaBoy.
+                if (order.hasRider) ...[
+                  const SizedBox(height: 8),
+                  _Row(
+                    icon: Icons.two_wheeler,
+                    label: l10n.riderName(order.riderName) +
+                        (order.riderPhone.isEmpty ? '' : ' · ${order.riderPhone}'),
+                    tone: colors.checked,
+                  ),
+                ],
                 const SizedBox(height: 8),
                 _Row(
                   icon: order.isCashOnDelivery

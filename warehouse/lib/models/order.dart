@@ -184,6 +184,8 @@ class Order {
     this.packedByName = '',
     this.auditedAt,
     this.auditedByName = '',
+    this.riderName = '',
+    this.riderPhone = '',
     this.lineCount = 0,
     this.packedCount = 0,
     this.totalQuantity = 0,
@@ -226,6 +228,13 @@ class Order {
   final String packedByName;
   final DateTime? auditedAt;
   final String auditedByName;
+
+  /// The rider taking it to the customer -- set once a rider accepts it in
+  /// YeaksaBoy (or a dispatcher picks one on the website). Empty until then.
+  final String riderName;
+  final String riderPhone;
+
+  bool get hasRider => riderName.isNotEmpty;
 
   final int lineCount;
   final int packedCount;
@@ -296,6 +305,8 @@ class Order {
       packedByName: packedByName,
       auditedAt: auditedAt,
       auditedByName: auditedByName,
+      riderName: riderName,
+      riderPhone: riderPhone,
       lineCount: lines == null ? lineCount : nextLines.length,
       packedCount: lines == null
           ? packedCount
@@ -313,6 +324,7 @@ class Order {
     final items = json['items'];
     final photos = json['photos'];
     final location = json['location'];
+    final rider = json['rider'];
     return Order(
       id: '${json['id']}',
       // Some ERP rows carry no invoice number; the id is what staff would quote.
@@ -335,6 +347,8 @@ class Order {
       packedByName: _text(json['packed_by_name']) ?? '',
       auditedAt: _date(json['audited_at']),
       auditedByName: _text(json['audited_by_name']) ?? '',
+      riderName: rider is Map<String, dynamic> ? (_text(rider['name']) ?? '') : '',
+      riderPhone: rider is Map<String, dynamic> ? (_text(rider['phone']) ?? '') : '',
       lineCount: (json['line_count'] as num?)?.toInt() ?? 0,
       packedCount: (json['packed_count'] as num?)?.toInt() ?? 0,
       totalQuantity: (json['total_quantity'] as num?)?.toDouble() ?? 0,

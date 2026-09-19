@@ -364,6 +364,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String riderName(String name) {
+    return 'Rider: $name';
+  }
+
+  @override
   String auditedByName(String name) {
     return 'Audited by $name';
   }

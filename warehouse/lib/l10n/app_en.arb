@@ -154,6 +154,8 @@
       }
     }
   },
+  "riderName": "Rider: {name}",
+  "@riderName": {"placeholders": {"name": {"type": "String"}}},
   "auditedByName": "Audited by {name}",
   "@auditedByName": {
     "placeholders": {

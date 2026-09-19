@@ -692,6 +692,12 @@ abstract class AppLocalizations {
   /// **'Packed by {name}'**
   String packedByName(String name);
 
+  /// No description provided for @riderName.
+  ///
+  /// In en, this message translates to:
+  /// **'Rider: {name}'**
+  String riderName(String name);
+
   /// No description provided for @auditedByName.
   ///
   /// In en, this message translates to:

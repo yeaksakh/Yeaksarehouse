@@ -99,6 +99,7 @@
   "shipmentNoLongerHere": "កម្មង់នោះលែងមាននៅទីនេះទៀតហើយ។",
   "shipmentHasLeft": "កម្មង់នេះបានចេញពីឃ្លាំងហើយ។",
   "packedByName": "ខ្ចប់ដោយ {name}",
+  "riderName": "អ្នកដឹកជញ្ជូន៖ {name}",
   "auditedByName": "ត្រួតពិនិត្យដោយ {name}",
   "products": "ផលិតផល",
   "stockCount": "រាប់ស្តុក",
