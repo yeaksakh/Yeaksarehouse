@@ -38,9 +38,17 @@ class StaffRef {
 /// A photo filed against a shipment, the status it is evidence for, and when it
 /// was uploaded.
 class OrderPhoto {
-  const OrderPhoto({required this.url, this.stage, this.takenAt});
+  const OrderPhoto(
+      {required this.url, this.stage, this.takenAt, this.thumbUrl = ''});
 
   final String url;
+
+  /// The server's <=300px thumbnail (`thumb_url`), ~10x smaller than [url];
+  /// empty from an older server.
+  final String thumbUrl;
+
+  /// What the photo grid loads: the thumbnail when there is one.
+  String get previewUrl => thumbUrl.isNotEmpty ? thumbUrl : url;
   final FulfilmentStage? stage;
   final DateTime? takenAt;
 }
@@ -356,8 +364,10 @@ class Order {
       packedByName: _text(json['packed_by_name']) ?? '',
       auditedAt: _date(json['audited_at']),
       auditedByName: _text(json['audited_by_name']) ?? '',
-      riderName: rider is Map<String, dynamic> ? (_text(rider['name']) ?? '') : '',
-      riderPhone: rider is Map<String, dynamic> ? (_text(rider['phone']) ?? '') : '',
+      riderName:
+          rider is Map<String, dynamic> ? (_text(rider['name']) ?? '') : '',
+      riderPhone:
+          rider is Map<String, dynamic> ? (_text(rider['phone']) ?? '') : '',
       riderStage: _text(json['rider_stage']) ?? '',
       riderStageAt: _date(json['rider_stage_at']),
       lineCount: (json['line_count'] as num?)?.toInt() ?? 0,
@@ -374,6 +384,7 @@ class Order {
               .whereType<Map<String, dynamic>>()
               .map((photo) => OrderPhoto(
                     url: _text(photo['url']) ?? '',
+                    thumbUrl: _text(photo['thumb_url']) ?? '',
                     stage: stageFromApiOrNull(photo['stage']),
                     takenAt: _date(photo['taken_at']),
                   ))

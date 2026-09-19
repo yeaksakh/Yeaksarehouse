@@ -246,6 +246,19 @@ void main() {
     );
   });
 
+  test('photos: the grid loads the thumbnail, the full picture stays for zoom', () {
+    final o = Order.fromApi({
+      ...shipmentJson(withItems: true),
+      'photos': [
+        {'url': 'https://x/full.webp', 'thumb_url': 'https://x/thumbs/full.webp', 'stage': 'packed'},
+        {'url': 'https://x/old.webp', 'stage': 'packed'},
+      ],
+    });
+    expect(o.photos.first.previewUrl, 'https://x/thumbs/full.webp');
+    expect(o.photos.first.url, 'https://x/full.webp');
+    expect(o.photos.last.previewUrl, 'https://x/old.webp');
+  });
+
   test("a rider's latest step is read from the shipment", () {
     final o = Order.fromApi({
       ...shipmentJson(),

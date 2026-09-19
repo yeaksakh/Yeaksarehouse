@@ -39,7 +39,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   /// True while the label PDF is being fetched and the print sheet opened.
   bool _printing = false;
 
-
   /// The item a scan last landed on, so it can be flashed.
   String? _flashedLineId;
 
@@ -199,7 +198,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   const SizedBox(height: 8),
                   _Row(
                     icon: Icons.inventory_2_outlined,
-                    label: '${order.packedByName.isEmpty ? l10n.stagePacked : l10n.packedByName(order.packedByName)}'
+                    label:
+                        '${order.packedByName.isEmpty ? l10n.stagePacked : l10n.packedByName(order.packedByName)}'
                         ' · ${dateTime(order.packedAt!)}',
                   ),
                 ],
@@ -207,7 +207,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   const SizedBox(height: 8),
                   _Row(
                     icon: Icons.fact_check_outlined,
-                    label: '${order.auditedByName.isEmpty ? l10n.stageAudited : l10n.auditedByName(order.auditedByName)}'
+                    label:
+                        '${order.auditedByName.isEmpty ? l10n.stageAudited : l10n.auditedByName(order.auditedByName)}'
                         ' · ${dateTime(order.auditedAt!)}',
                   ),
                 ],
@@ -217,7 +218,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   _Row(
                     icon: Icons.two_wheeler,
                     label: l10n.riderName(order.riderName) +
-                        (order.riderPhone.isEmpty ? '' : ' · ${order.riderPhone}'),
+                        (order.riderPhone.isEmpty
+                            ? ''
+                            : ' · ${order.riderPhone}'),
                     tone: colors.checked,
                   ),
                 ],
@@ -260,8 +263,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               icon: Icons.person_pin_outlined,
               color: scheme.onSurfaceVariant,
               title: 'Being packed by ${order.preparedBy!.name}',
-              message:
-                  l10n.onlyAccepterTicks,
+              message: l10n.onlyAccepterTicks,
             ),
           ],
           if (order.isCashOnDelivery) ...[
@@ -270,8 +272,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               icon: Icons.payments,
               color: colors.prepared,
               title: l10n.collectOnDelivery,
-              message:
-                  l10n.collectOnDeliveryBody,
+              message: l10n.collectOnDeliveryBody,
             ),
           ],
           const SizedBox(height: 20),
@@ -280,7 +281,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               Expanded(
                 child: Text(
                   l10n.items,
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                      fontSize: 17, fontWeight: FontWeight.w700),
                 ),
               ),
               Text(
@@ -342,19 +344,33 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.network(
-                            photo.url,
-                            width: 104,
-                            height: 104,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
+                        // The thumbnail in the grid; tapping opens the full
+                        // picture, zoomable.
+                        GestureDetector(
+                          onTap: () => showDialog<void>(
+                            context: context,
+                            builder: (_) => Dialog(
+                              insetPadding: const EdgeInsets.all(12),
+                              child: InteractiveViewer(
+                                child: Image.network(photo.url,
+                                    fit: BoxFit.contain),
+                              ),
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              photo.previewUrl,
                               width: 104,
                               height: 104,
-                              color: scheme.surfaceContainerHighest,
-                              child: Icon(Icons.broken_image,
-                                  color: scheme.outline),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 104,
+                                height: 104,
+                                color: scheme.surfaceContainerHighest,
+                                child: Icon(Icons.broken_image,
+                                    color: scheme.outline),
+                              ),
                             ),
                           ),
                         ),
@@ -445,7 +461,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     switch (choice) {
       case _PrintRoute.settings:
         await Navigator.of(context).push(MaterialPageRoute<void>(
-          builder: (_) => PrinterSettingsScreen(printer: context.read<LabelPrinter>()),
+          builder: (_) =>
+              PrinterSettingsScreen(printer: context.read<LabelPrinter>()),
         ));
       case _PrintRoute.system:
         await _printViaSystem(order);
@@ -484,8 +501,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     try {
       final sheet = await context.read<TasksController>().labelData(order.id);
       if (sheet.isEmpty) {
-        messenger.showSnackBar(
-            SnackBar(content: Text(l10n.nothingToLabel)));
+        messenger.showSnackBar(SnackBar(content: Text(l10n.nothingToLabel)));
         return;
       }
       var sent = 0;
@@ -512,8 +528,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         }
         sent++;
       }
-      messenger.showSnackBar(SnackBar(
-          content: Text('$sent label${sent == 1 ? '' : 's'} sent.')));
+      messenger.showSnackBar(
+          SnackBar(content: Text('$sent label${sent == 1 ? '' : 's'} sent.')));
     } catch (error) {
       messenger.showSnackBar(SnackBar(content: Text('$error')));
     } finally {
