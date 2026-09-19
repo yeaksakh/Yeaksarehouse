@@ -67,17 +67,23 @@ class ShipmentsApi {
   /// Not oldest first, although a queue is worked front to back: the live book
   /// holds thousands of `ordered` sales going back years that nobody will ever
   /// pack, and oldest first put those at the top of every shift.
-  Future<ShipmentPage> list(FulfilmentStage stage, {int limit = 100}) =>
-      _page(stage.apiValue, limit);
+  Future<ShipmentPage> list(FulfilmentStage stage,
+          {int limit = 100, String query = ''}) =>
+      _page(stage.apiValue, limit, query);
 
   /// The Riders tab: shipments a rider has taken and not finished, plus the
   /// ones delivered today, each with the rider's latest step.
-  Future<ShipmentPage> riders({int limit = 100}) => _page('riders', limit);
+  ///
+  /// [query] is the server's `q`: invoice number, customer name or mobile,
+  /// searched over the whole book rather than only the loaded page.
+  Future<ShipmentPage> riders({int limit = 100, String query = ''}) =>
+      _page('riders', limit, query);
 
-  Future<ShipmentPage> _page(String status, int limit) async {
+  Future<ShipmentPage> _page(String status, int limit, String query) async {
     final body = await _send('GET', '/api/shipments', query: {
       'status': status,
       'limit': '$limit',
+      if (query.isNotEmpty) 'q': query,
     });
     final counts = <FulfilmentStage, int>{};
     final raw = body['counts'];

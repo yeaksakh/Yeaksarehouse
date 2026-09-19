@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
@@ -27,6 +29,34 @@ class TasksScreen extends StatefulWidget {
 }
 
 class _TasksScreenState extends State<TasksScreen> {
+  final _searchText = TextEditingController();
+  bool _searching = false;
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchText.dispose();
+    super.dispose();
+  }
+
+  /// Asks the server once typing pauses, not on every letter.
+  void _onSearchChanged(String text) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      if (mounted) context.read<TasksController>().search(text);
+    });
+  }
+
+  void _toggleSearch() {
+    _debounce?.cancel();
+    setState(() => _searching = !_searching);
+    if (!_searching) {
+      _searchText.clear();
+      context.read<TasksController>().search('');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -53,7 +83,24 @@ class _TasksScreenState extends State<TasksScreen> {
       child: Scaffold(
         appBar: AppBar(
           titleSpacing: 20,
-          title: Column(
+          title: _searching
+              ? TextField(
+                  key: const ValueKey('order-search'),
+                  controller: _searchText,
+                  autofocus: true,
+                  textInputAction: TextInputAction.search,
+                  onChanged: _onSearchChanged,
+                  onSubmitted: (text) {
+                    _debounce?.cancel();
+                    context.read<TasksController>().search(text);
+                  },
+                  decoration: InputDecoration(
+                    hintText: l10n.searchOrdersHint,
+                    border: InputBorder.none,
+                    filled: false,
+                  ),
+                )
+              : Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
@@ -70,6 +117,14 @@ class _TasksScreenState extends State<TasksScreen> {
                 ),
             ],
           ),
+          actions: [
+            IconButton(
+              tooltip: _searching ? l10n.closeSearch : l10n.searchOrders,
+              icon: Icon(_searching ? Icons.close : Icons.search),
+              onPressed: _toggleSearch,
+            ),
+            const SizedBox(width: 8),
+          ],
           bottom: TabBar(
             tabs: [
               _LabelledTab(
@@ -191,17 +246,61 @@ class _WorkBoard extends StatelessWidget {
       }
     }
 
+    // An order leaves its stage's section once somebody has it in hand: an
+    // Ordered one with a packer moves to Packing, an Audited one a rider has
+    // taken leaves the board for History. Counts are the server's, less the
+    // ones moved out of that section.
+    final ordered = tasks.queue(FulfilmentStage.ordered);
+    final packing = ordered.where((o) => o.isAccepted).toList();
+    final audited = tasks.queue(FulfilmentStage.audited);
+    final taken = audited.where((o) => o.hasRider).length;
+    final groups = [
+      (
+        stage: FulfilmentStage.ordered,
+        title: l10n.stageOrdered,
+        orders: ordered.where((o) => !o.isAccepted).toList(),
+        count: tasks.queueCount(FulfilmentStage.ordered) - packing.length,
+        color: colors.forStage(FulfilmentStage.ordered),
+        key: 'ordered',
+      ),
+      (
+        stage: FulfilmentStage.ordered,
+        title: l10n.stagePacking,
+        orders: packing,
+        count: packing.length,
+        color: colors.packing,
+        key: 'packing',
+      ),
+      (
+        stage: FulfilmentStage.packed,
+        title: l10n.stagePacked,
+        orders: tasks.queue(FulfilmentStage.packed),
+        count: tasks.queueCount(FulfilmentStage.packed),
+        color: colors.forStage(FulfilmentStage.packed),
+        key: 'packed',
+      ),
+      (
+        stage: FulfilmentStage.audited,
+        title: l10n.stageAudited,
+        orders: audited.where((o) => !o.hasRider).toList(),
+        count: tasks.queueCount(FulfilmentStage.audited) - taken,
+        color: colors.forStage(FulfilmentStage.audited),
+        key: 'audited',
+      ),
+    ];
+
     final sections = <Widget>[];
-    for (final stage in kStaffQueues) {
-      final orders = tasks.queue(stage);
-      final count = tasks.queueCount(stage);
+    for (final group in groups) {
+      final orders = group.orders;
+      final count = group.count < orders.length ? orders.length : group.count;
       if (orders.isEmpty) continue;
-      final color = colors.forStage(stage);
-      sections.add(_StageHeader(title(stage), count, color));
+      final color = group.color;
+      final stage = group.stage;
+      sections.add(_StageHeader(group.title, count, color));
       sections.add(const SizedBox(height: 10));
       for (final (i, order) in orders.take(_perStage).indexed) {
         sections.add(Appear(
-          key: ValueKey('work-${order.id}'),
+          key: ValueKey('work-${group.key}-${order.id}'),
           index: i,
           child: OrderTaskCard(
             order: order,
@@ -245,14 +344,21 @@ class _WorkBoard extends StatelessWidget {
                 SizedBox(
                   height: MediaQuery.sizeOf(context).height * 0.6,
                   child: EmptyState(
-                    icon:
-                        tasks.error != null ? Icons.cloud_off : Icons.task_alt,
+                    icon: tasks.error != null
+                        ? Icons.cloud_off
+                        : tasks.query.isNotEmpty
+                            ? Icons.search_off
+                            : Icons.task_alt,
                     title: tasks.error != null
                         ? 'Could not load shipments'
-                        : l10n.nothingToDoTitle,
+                        : tasks.query.isNotEmpty
+                            ? l10n.noMatchTitle
+                            : l10n.nothingToDoTitle,
                     message: tasks.error != null
                         ? '${tasks.error}\nPull down to try again.'
-                        : l10n.nothingToDoBody,
+                        : tasks.query.isNotEmpty
+                            ? l10n.noMatchBody(tasks.query)
+                            : l10n.nothingToDoBody,
                   ),
                 ),
               ],
@@ -466,11 +572,15 @@ class _RidersQueue extends StatelessWidget {
                     icon: tasks.ridersLoaded
                         ? Icons.two_wheeler
                         : Icons.cloud_off,
-                    title: tasks.ridersLoaded
-                        ? l10n.noRidersTitle
-                        : 'Could not load shipments',
+                    title: !tasks.ridersLoaded
+                        ? 'Could not load shipments'
+                        : tasks.query.isNotEmpty
+                            ? l10n.noMatchTitle
+                            : l10n.noRidersTitle,
                     message: tasks.ridersLoaded
-                        ? l10n.noRidersBody
+                        ? (tasks.query.isNotEmpty
+                            ? l10n.noMatchBody(tasks.query)
+                            : l10n.noRidersBody)
                         : '${tasks.error ?? ''}\nPull down to try again.',
                   ),
                 ),

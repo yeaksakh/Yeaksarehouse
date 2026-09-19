@@ -171,8 +171,12 @@ void main() {
       buildOrder(id: '1', stage: FulfilmentStage.ordered),
     ]);
     double y(String text) => tester.getTopLeft(find.text(text).first).dy;
-    expect(y('Ordered') < y('Packed'), isTrue);
+    expect(y('Ordered') < y('Packing'), isTrue);
+    expect(y('Packing') < y('Packed'), isTrue);
     expect(y('Packed') < y('Audited'), isTrue);
+    // YK-2 has a packer, so it sits under Packing, not Ordered.
+    expect(y('Packing') < y('YK-2') && y('YK-2') < y('Packed'), isTrue);
+    expect(y('YK-1') < y('Packing'), isTrue);
 
     Finder buttonOn(String code, String label) => find.descendant(
         of: find.ancestor(of: find.text(code), matching: find.byType(OrderTaskCard)),
@@ -183,6 +187,56 @@ void main() {
     expect(find.descendant(
         of: find.ancestor(of: find.text('YK-4'), matching: find.byType(OrderTaskCard)),
         matching: find.text('Waiting for the rider')), findsOneWidget);
+  });
+
+  testWidgets('accepting moves a card from Ordered to Packing', (tester) async {
+    await signIn(tester, orders: [buildOrder(id: '1')]);
+    expect(find.text('Packing'), findsNothing);
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Accept to pack'));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('Packing'), findsOneWidget);
+    // The card now sits under the Packing heading.
+    expect(tester.getTopLeft(find.text('Packing')).dy <
+        tester.getTopLeft(find.text('YK-1')).dy, isTrue);
+  });
+
+  testWidgets('an audited order a rider has taken leaves the Work board',
+      (tester) async {
+    await signIn(tester, orders: [
+      buildOrder(id: '1', stage: FulfilmentStage.audited),
+      buildOrder(id: '2', stage: FulfilmentStage.audited, riderName: 'Dara'),
+    ]);
+    expect(find.text('YK-1'), findsOneWidget);
+    expect(find.text('YK-2'), findsNothing);
+  });
+
+  testWidgets('the search button filters every list by invoice or customer',
+      (tester) async {
+    await signIn(tester, orders: [
+      buildOrder(id: '11'),
+      buildOrder(id: '22', stage: FulfilmentStage.packed),
+    ]);
+    expect(find.byKey(const ValueKey('order-search')), findsNothing);
+    await tester.tap(find.byTooltip('Search'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.enterText(find.byKey(const ValueKey('order-search')), 'YK-22');
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+    Finder card(String code) => find.descendant(
+        of: find.byType(OrderTaskCard), matching: find.text(code));
+    expect(card('YK-22'), findsOneWidget);
+    expect(card('YK-11'), findsNothing);
+
+    await tester.enterText(find.byKey(const ValueKey('order-search')), 'nobody');
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Nothing found'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Close search'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(card('YK-11'), findsOneWidget);
+    expect(card('YK-22'), findsOneWidget);
   });
 
   testWidgets('a shipment nobody has accepted offers Accept, and no ticking',

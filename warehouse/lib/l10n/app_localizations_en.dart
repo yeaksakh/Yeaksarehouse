@@ -30,6 +30,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stagePacked => 'Packed';
 
   @override
+  String get stagePacking => 'Packing';
+
+  @override
+  String get searchOrders => 'Search';
+
+  @override
+  String get searchOrdersHint => 'Invoice, customer or phone';
+
+  @override
+  String get closeSearch => 'Close search';
+
+  @override
+  String get noMatchTitle => 'Nothing found';
+
+  @override
+  String noMatchBody(String query) {
+    return 'No order matches “$query”.';
+  }
+
+  @override
   String get stageAudited => 'Audited';
 
   @override

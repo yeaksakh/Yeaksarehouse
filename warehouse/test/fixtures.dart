@@ -94,6 +94,7 @@ Order buildOrder({
   String auditedByName = '',
   List<OrderPhoto> photos = const [],
   String note = '',
+  String riderName = '',
 }) {
   final items = lines ?? [buildLine()];
   return Order(
@@ -113,6 +114,7 @@ Order buildOrder({
     auditedAt: auditedAt,
     auditedByName: auditedByName,
     photos: photos,
+    riderName: riderName,
     lineCount: items.length,
     packedCount: items.where((line) => line.packed).length,
     totalQuantity: items.fold(0, (sum, line) => sum + line.quantity),
@@ -152,19 +154,29 @@ class FakeShipmentsApi extends ShipmentsApi {
 
   Order _save(Order order) => _orders[order.id] = order;
 
+  /// The server's `q`: invoice number, customer name or mobile.
+  static bool _matches(Order order, String query) {
+    final q = query.trim().toLowerCase();
+    return q.isEmpty ||
+        order.code.toLowerCase().contains(q) ||
+        order.customerName.toLowerCase().contains(q) ||
+        order.customerPhone.contains(q);
+  }
+
   StaffRef get _me => StaffRef(id: staff.id, name: staff.name);
 
   @override
-  Future<ShipmentPage> list(FulfilmentStage stage, {int limit = 100}) async {
+  Future<ShipmentPage> list(FulfilmentStage stage,
+      {int limit = 100, String query = ''}) async {
     if (expired) {
       throw ShipmentsException('This API token has expired.', status: 401);
     }
     final counts = <FulfilmentStage, int>{};
-    for (final order in _orders.values) {
+    for (final order in _orders.values.where((o) => _matches(o, query))) {
       counts[order.stage] = (counts[order.stage] ?? 0) + 1;
     }
     final orders = _orders.values
-        .where((order) => order.stage == stage)
+        .where((order) => order.stage == stage && _matches(order, query))
         .toList()
       ..sort((a, b) => b.placedAt.compareTo(a.placedAt));
     return ShipmentPage(orders: orders, counts: counts);
@@ -172,11 +184,13 @@ class FakeShipmentsApi extends ShipmentsApi {
 
   /// The Riders tab: anything a rider has taken.
   @override
-  Future<ShipmentPage> riders({int limit = 100}) async {
+  Future<ShipmentPage> riders({int limit = 100, String query = ''}) async {
     if (expired) {
       throw ShipmentsException('This API token has expired.', status: 401);
     }
-    final orders = _orders.values.where((order) => order.hasRider).toList();
+    final orders = _orders.values
+        .where((order) => order.hasRider && _matches(order, query))
+        .toList();
     return ShipmentPage(orders: orders, counts: const {}, ridersCount: orders.length);
   }
 

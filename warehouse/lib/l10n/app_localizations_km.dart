@@ -30,6 +30,26 @@ class AppLocalizationsKm extends AppLocalizations {
   String get stagePacked => 'ខ្ចប់រួច';
 
   @override
+  String get stagePacking => 'កំពុងខ្ចប់';
+
+  @override
+  String get searchOrders => 'ស្វែងរក';
+
+  @override
+  String get searchOrdersHint => 'វិក្កយបត្រ ឈ្មោះ ឬលេខទូរស័ព្ទ';
+
+  @override
+  String get closeSearch => 'បិទការស្វែងរក';
+
+  @override
+  String get noMatchTitle => 'រកមិនឃើញ';
+
+  @override
+  String noMatchBody(String query) {
+    return 'គ្មានការបញ្ជាទិញណាត្រូវនឹង «$query» ទេ។';
+  }
+
+  @override
   String get stageAudited => 'ត្រួតពិនិត្យរួច';
 
   @override

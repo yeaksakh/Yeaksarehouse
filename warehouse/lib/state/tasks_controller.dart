@@ -31,6 +31,11 @@ class TasksController extends ChangeNotifier {
   final Set<FulfilmentStage> _loading = {};
   bool _busy = false;
   String? _error;
+  String _query = '';
+
+  /// The search box on the Orders screen. Every list is loaded under it, so
+  /// the counts and the History tab follow the search too.
+  String get query => _query;
 
   /// True while a change is on its way to the server. Buttons wait on it, so a
   /// double tap cannot send the same move twice.
@@ -84,7 +89,10 @@ class TasksController extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      final page = await _api.list(stage);
+      final asked = _query;
+      final page = await _api.list(stage, query: asked);
+      // Typed on while this was on its way: a later load has the right answer.
+      if (asked != _query) return;
       _queues[stage] = page.orders;
       _counts
         ..clear()
@@ -108,11 +116,21 @@ class TasksController extends ChangeNotifier {
     await loadRiders();
   }
 
+  /// Searches every list for [text]; empty shows everything again.
+  Future<void> search(String text) async {
+    final wanted = text.trim();
+    if (wanted == _query) return;
+    _query = wanted;
+    await refreshAll();
+  }
+
   Future<void> loadRiders() async {
     _ridersLoading = true;
     notifyListeners();
     try {
-      final page = await _api.riders();
+      final asked = _query;
+      final page = await _api.riders(query: asked);
+      if (asked != _query) return;
       _riders = page.orders;
       _ridersCount = page.ridersCount ?? page.orders.length;
     } on ShipmentsException catch (failure) {

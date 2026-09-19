@@ -140,6 +140,42 @@ abstract class AppLocalizations {
   /// **'Packed'**
   String get stagePacked;
 
+  /// No description provided for @stagePacking.
+  ///
+  /// In en, this message translates to:
+  /// **'Packing'**
+  String get stagePacking;
+
+  /// No description provided for @searchOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get searchOrders;
+
+  /// No description provided for @searchOrdersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice, customer or phone'**
+  String get searchOrdersHint;
+
+  /// No description provided for @closeSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Close search'**
+  String get closeSearch;
+
+  /// No description provided for @noMatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing found'**
+  String get noMatchTitle;
+
+  /// No description provided for @noMatchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No order matches “{query}”.'**
+  String noMatchBody(String query);
+
   /// No description provided for @stageAudited.
   ///
   /// In en, this message translates to:

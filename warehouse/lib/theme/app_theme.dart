@@ -73,6 +73,9 @@ class AppColors extends ThemeExtension<AppColors> {
 
   /// Packed keeps the amber and Audited the green the warehouse's two stages
   /// always had, so a colour means the same step it did before.
+  /// Accepted by a packer and not yet packed: between Ordered and Packed.
+  Color get packing => Color.lerp(ordered, prepared, 0.5)!;
+
   Color forStage(FulfilmentStage stage) => switch (stage) {
         FulfilmentStage.ordered => ordered,
         FulfilmentStage.packed => prepared,
