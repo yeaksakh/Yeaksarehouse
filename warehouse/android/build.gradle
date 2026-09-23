@@ -22,9 +22,10 @@ subprojects {
                     namespace project.group.toString()
                 }
                 // Same vintage problem: the plugin targets android-31, while its
-                // own androidx dependencies now require 34+. Pinned to the app's
-                // own compileSdk so there is one number to change, not two.
-                compileSdk = 36
+                // own androidx dependencies now require 34+. 37 because
+                // permission_handler_android 14.1 uses API 37 symbols
+                // (ACCESS_LOCAL_NETWORK); the till app pins the same.
+                compileSdk = 37
             }
         }
     }
