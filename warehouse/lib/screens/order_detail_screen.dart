@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'printer_settings_screen.dart';
-import '../widgets/box_label_sticker.dart';
 import '../services/label_printer.dart';
+import '../services/pdf_stickers.dart';
 
 import '../models/fulfilment_stage.dart';
 import '../models/order.dart';
@@ -499,31 +499,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final printer = context.read<LabelPrinter>();
     setState(() => _printing = true);
     try {
-      final sheet = await context.read<TasksController>().labelData(order.id);
-      if (sheet.isEmpty) {
+      // The same PDF "Save as PDF" gives, page by page, so the sticker that
+      // comes out of the printer is exactly the one on screen.
+      final pdf = await context.read<TasksController>().labels(order.id);
+      final stickers = await stickersFromPdf(pdf);
+      if (stickers.isEmpty) {
         messenger.showSnackBar(SnackBar(content: Text(l10n.nothingToLabel)));
         return;
       }
       var sent = 0;
-      for (final label in sheet.labels) {
-        final sticker = await renderStickerForPrinter(BoxLabelSticker(
-          label: label,
-          invoiceNo: sheet.invoiceNo,
-          customer: sheet.customer,
-          phone: sheet.phone,
-          company: sheet.company,
-          seller: sheet.sellerLine,
-          driver: sheet.driver,
-          qrData: sheet.publicUrl,
-          acceptedBy: sheet.acceptedBy,
-          packedBy: sheet.packedBy,
-          auditedBy: sheet.auditedBy,
-        ));
+      for (final sticker in stickers) {
         final result = await printer.printLabel(sticker);
         if (!result.succeeded) {
           messenger.showSnackBar(SnackBar(
               content: Text('${result.message} '
-                  '($sent of ${sheet.labels.length} printed)')));
+                  '($sent of ${stickers.length} printed)')));
           return;
         }
         sent++;

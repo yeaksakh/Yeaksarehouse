@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'label_bitmap.dart';
@@ -75,7 +77,9 @@ class LabelPrinter {
   }
 
   /// The printer the packer chose, if it is still paired with this phone.
-  Future<BluetoothDevice?> restore() async {
+  ///
+  /// [paired] is the list the caller already fetched, if it has one.
+  Future<BluetoothDevice?> restore([List<BluetoothDevice>? paired]) async {
     final stored = (await SharedPreferences.getInstance())
         .getString(_savedDeviceKey);
     if (stored == null || stored.isEmpty) return null;
@@ -86,7 +90,7 @@ class LabelPrinter {
     // Matched against what is ACTUALLY paired now: a printer that has been
     // unpaired since should show as "not set" rather than failing at the moment
     // someone presses print.
-    for (final device in await devices()) {
+    for (final device in paired ?? await devices()) {
       if (device.address == address) {
         _selected = device;
         return device;
@@ -115,9 +119,34 @@ class LabelPrinter {
   /// Pairing itself is left to Android. Thermal printers want a PIN and
   /// sometimes a power cycle, and the system dialog handles that far better
   /// than anything this app could put on screen.
+  ///
+  /// WHY THE PERMISSIONS ARE ASKED HERE FIRST. Left to itself, the plugin asks
+  /// Android 12+ for them and then never hears the answer -- it listens for a
+  /// different request code than the one it sent -- so the very first call
+  /// never returns and the printer list spins until the screen is opened a
+  /// second time. Asked here, the plugin finds them already granted.
   Future<List<BluetoothDevice>> devices() async {
+    if (Platform.isAndroid) {
+      try {
+        final granted = await [
+          Permission.bluetoothScan,
+          Permission.bluetoothConnect,
+          // The plugin also refuses without fine location on Android 12+.
+          Permission.location,
+        ].request();
+        if (granted.values.any((s) => !s.isGranted)) return const [];
+      } catch (_) {
+        // Asking failed outright -- e.g. a build without the permission
+        // plugin's native half. Fall through and let the printer plugin try:
+        // on a phone that already granted them, that still lists the printers.
+      }
+    }
     try {
-      return await _printer.getBondedDevices();
+      // Bounded: if the plugin ever does leave the call hanging again, the
+      // screen shows "no printers" and a refresh, not a spinner forever.
+      return await _printer
+          .getBondedDevices()
+          .timeout(const Duration(seconds: 8));
     } catch (_) {
       return const [];
     }

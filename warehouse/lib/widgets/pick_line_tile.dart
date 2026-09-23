@@ -143,15 +143,26 @@ class PickLineTile extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          [
-                            if (line.sku.isNotEmpty) line.sku,
-                            '× ${line.quantityLabel}',
-                          ].join('  ·  '),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: scheme.onSurfaceVariant,
-                          ),
+                        // The amount is what a picker counts out, so it is as
+                        // big as the name; the SKU stays small beside it.
+                        Text.rich(
+                          TextSpan(children: [
+                            if (line.sku.isNotEmpty)
+                              TextSpan(
+                                text: '${line.sku}  ·  ',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            TextSpan(
+                              text: '× ${line.quantityLabel}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ]),
                         ),
                         if (line.packed && line.packedBy != null) ...[
                           const SizedBox(height: 4),

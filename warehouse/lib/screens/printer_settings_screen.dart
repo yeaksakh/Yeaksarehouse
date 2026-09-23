@@ -38,10 +38,21 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final on = await widget.printer.isOn;
-    final devices = on ? await widget.printer.devices() : <BluetoothDevice>[];
-    final saved = await widget.printer.restore();
-    final language = await widget.printer.restoreLanguage();
+    var on = false;
+    var devices = <BluetoothDevice>[];
+    BluetoothDevice? saved;
+    var language = _language;
+    try {
+      on = await widget.printer.isOn;
+      devices = on ? await widget.printer.devices() : <BluetoothDevice>[];
+      // Matched against the list just fetched rather than asking the plugin
+      // for it a second time.
+      saved = await widget.printer.restore(devices);
+      language = await widget.printer.restoreLanguage();
+    } catch (_) {
+      // Whatever failed, the spinner must still stop: an empty list with a
+      // refresh button is something a packer can act on, a spinner is not.
+    }
     if (!mounted) return;
     setState(() {
       _bluetoothOff = !on;
