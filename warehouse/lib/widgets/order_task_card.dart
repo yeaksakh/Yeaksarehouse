@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
+
 import '../models/fulfilment_stage.dart';
 import '../models/order.dart';
 import '../theme/app_theme.dart';
@@ -7,26 +9,42 @@ import '../utils/formatters.dart';
 import 'section_card.dart';
 import 'stage_chip.dart';
 
-/// One order in a queue.
+/// One shipment in a tab.
 ///
-/// Leads with the order code and how long it has been waiting, because in a
-/// queue worked front-to-back those are the two things that decide what a person
-/// picks up next.
+/// Leads with the invoice number and how long it has been waiting, because in a
+/// queue worked front to back those decide what a person picks up next -- and,
+/// while it is `ordered`, whether anyone has taken it yet.
 class OrderTaskCard extends StatelessWidget {
-  const OrderTaskCard({super.key, required this.order, this.onTap});
+  const OrderTaskCard({
+    super.key,
+    required this.order,
+    this.staffId,
+    this.onTap,
+    this.action,
+  });
 
   final Order order;
+
+  /// The next step as a button under the card (Accept, Pack, Audit) -- the Work
+  /// board passes one; the full per-stage lists do not.
+  final Widget? action;
+
+  /// Who is signed in, so the card can say "Yours" rather than their own name.
+  final String? staffId;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
-    final progress = order.pickProgress;
-    final partlyPicked = progress > 0 && progress < 1;
+    final ordered = order.stage == FulfilmentStage.ordered;
+    final partlyPacked =
+        ordered && order.packedCount > 0 && !order.isFullyPacked;
 
     return SectionCard(
       onTap: onTap,
+      accent: colors.forOrder(order),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -51,65 +69,94 @@ class OrderTaskCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           // Wrap, not Row: three facts and their spacers overflow a 360px
-          // phone, and a fact that has been clipped off the edge is worse than
-          // one that moved to a second line.
+          // phone, and a fact clipped off the edge is worse than one that moved
+          // to a second line.
           Wrap(
             spacing: 14,
             runSpacing: 6,
             children: [
               _Fact(
                 icon: Icons.inventory_2_outlined,
-                text: plural(order.lineCount, 'line'),
+                text: plural(order.lineCount, 'item'),
               ),
               _Fact(
                 icon: Icons.numbers,
-                text: plural(order.unitCount, 'unit'),
+                text: plural(order.totalQuantity.round(), 'unit'),
               ),
               _Fact(
                 icon: Icons.schedule,
                 text: waitingFor(order.placedAt),
               ),
+              if (ordered && order.acceptedAt != null)
+                _Fact(
+                  icon: Icons.assignment_ind_outlined,
+                  text: 'Accepted ${relativeTime(order.acceptedAt!)}',
+                ),
             ],
           ),
-          if (partlyPicked) ...[
+          if (partlyPacked) ...[
             const SizedBox(height: 12),
             ClipRRect(
               borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 6,
-                backgroundColor: scheme.surfaceContainerHighest,
-                valueColor: AlwaysStoppedAnimation(
-                  colors.forStage(order.stage),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(end: order.packProgress),
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, _) => LinearProgressIndicator(
+                  value: value,
+                  minHeight: 6,
+                  backgroundColor: scheme.surfaceContainerHighest,
+                  valueColor:
+                      AlwaysStoppedAnimation(colors.forOrder(order)),
                 ),
               ),
             ),
             const SizedBox(height: 6),
             Text(
-              '${order.pickedCount} of ${order.unitCount} picked',
+              '${order.packedCount} of ${order.lineCount} packed',
               style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
             ),
           ],
-          if (order.isCashOnDelivery || order.staffNote != null) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (ordered && !order.isAccepted)
+                _Tag(
+                  icon: Icons.assignment_ind_outlined,
+                  label: l10n.notAccepted,
+                  color: colors.ordered,
+                )
+              else if (ordered && order.isAcceptedBy(staffId))
+                _Tag(
+                  icon: Icons.person,
+                  label: l10n.yours,
+                  color: colors.checked,
+                )
+              else if (order.isAccepted)
+                _Tag(
+                  icon: Icons.person_outline,
+                  label: l10n.withStaff(order.preparedBy!.name),
+                  color: scheme.onSurfaceVariant,
+                ),
+              if (order.isCashOnDelivery)
+                _Tag(
+                  icon: Icons.payments_outlined,
+                  label: l10n.collectCash,
+                  color: colors.prepared,
+                ),
+              if (order.note.isNotEmpty)
+                _Tag(
+                  icon: Icons.sticky_note_2_outlined,
+                  label: l10n.hasANote,
+                  color: scheme.onSurfaceVariant,
+                ),
+            ],
+          ),
+          if (action != null) ...[
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                if (order.isCashOnDelivery)
-                  _Tag(
-                    icon: Icons.payments_outlined,
-                    label: 'Collect cash',
-                    color: colors.prepared,
-                  ),
-                if (order.staffNote != null)
-                  _Tag(
-                    icon: Icons.sticky_note_2_outlined,
-                    label: 'Has a note',
-                    color: scheme.onSurfaceVariant,
-                  ),
-              ],
-            ),
+            SizedBox(width: double.infinity, child: action!),
           ],
         ],
       ),
@@ -160,12 +207,15 @@ class _Tag extends StatelessWidget {
         children: [
           Icon(icon, size: 13, color: color),
           const SizedBox(width: 5),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              color: color,
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
           ),
         ],
@@ -174,30 +224,31 @@ class _Tag extends StatelessWidget {
   }
 }
 
-/// Empty-queue copy, phrased per stage. A blank "To prepare" tab means the floor
-/// is caught up, which is worth saying rather than showing a generic shrug.
+/// Empty-tab copy, phrased per status. A blank Ordered tab means the floor is
+/// caught up, which is worth saying rather than showing a generic shrug.
 ({IconData icon, String title, String message}) emptyQueueCopy(
   FulfilmentStage stage,
+  AppLocalizations l10n,
 ) =>
     switch (stage) {
       FulfilmentStage.ordered => (
           icon: Icons.check_circle_outline,
-          title: 'Nothing to prepare',
-          message: 'Every new order has been packed. New ones land here.',
+          title: l10n.nothingToPack,
+          message: l10n.newOrdersLandHere,
         ),
-      FulfilmentStage.prepared => (
+      FulfilmentStage.packed => (
           icon: Icons.fact_check_outlined,
-          title: 'Nothing to check',
-          message: 'Packed orders waiting for a second pair of eyes show here.',
+          title: l10n.nothingWaitingForAudit,
+          message: l10n.packedWaitForSupervisor,
         ),
-      FulfilmentStage.checked => (
+      FulfilmentStage.audited => (
           icon: Icons.local_shipping_outlined,
-          title: 'Nothing waiting for a driver',
-          message: 'Checked orders sit here until a rider collects them.',
+          title: l10n.nothingWaitingForRider,
+          message: l10n.auditedWaitForRider,
         ),
       _ => (
           icon: Icons.inbox_outlined,
-          title: 'Nothing here',
-          message: 'No orders at this stage.',
+          title: l10n.nothingHereTitle,
+          message: l10n.noShipmentsAtStatus,
         ),
     };

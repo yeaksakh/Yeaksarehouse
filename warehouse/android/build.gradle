@@ -9,6 +9,28 @@ rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+// `blue_thermal_printer` (and other plugins of its vintage) predate AGP 8, which
+// made `namespace` compulsory: without this the build fails with "Namespace not
+// specified" while configuring that project. Falling back to the plugin's group
+// is what AGP's own upgrade assistant does, and it is the same fix the till app
+// (Yeaksaundry) has been shipping with for months.
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                if (namespace == null) {
+                    namespace project.group.toString()
+                }
+                // Same vintage problem: the plugin targets android-31, while its
+                // own androidx dependencies now require 34+. 37 because
+                // permission_handler_android 14.1 uses API 37 symbols
+                // (ACCESS_LOCAL_NETWORK); the till app pins the same.
+                compileSdk = 37
+            }
+        }
+    }
+}
+
 subprojects {
     project.evaluationDependsOn(":app")
 }

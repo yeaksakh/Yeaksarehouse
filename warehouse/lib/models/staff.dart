@@ -40,8 +40,23 @@ class Staff {
     required this.name,
     required this.role,
     required this.warehouseName,
-    this.staffCode,
+    this.username,
+    this.currencySymbol = r'$',
+    this.auditGranted = false,
   });
+
+  /// The server's `can_audit`: the role has Roles > Shipments > Audit shipment.
+  /// A packer with it may audit without being made a supervisor (which would
+  /// also hand them stock changes).
+  final bool auditGranted;
+
+  /// May mark a packed shipment audited.
+  bool get canAudit => role.canCheck || auditGranted;
+
+  /// The shop's currency, for the payslip.
+  final String currencySymbol;
+
+  bool get isAdmin => role == StaffRole.supervisor;
 
   final String id;
   final String name;
@@ -51,8 +66,8 @@ class Staff {
   /// multi-warehouse shop will eventually have someone in the wrong one.
   final String warehouseName;
 
-  /// The number on their badge, if the shop issues them.
-  final String? staffCode;
+  /// The yeaksa.com username they signed in with.
+  final String? username;
 
   String get initials {
     final parts = name.trim().split(RegExp(r'\s+'))
@@ -67,7 +82,9 @@ class Staff {
         'name': name,
         'role': role.apiValue,
         'warehouseName': warehouseName,
-        'staffCode': staffCode,
+        'username': username,
+        'currencySymbol': currencySymbol,
+        'auditGranted': auditGranted,
       };
 
   factory Staff.fromJson(Map<String, dynamic> json) => Staff(
@@ -75,6 +92,8 @@ class Staff {
         name: json['name'] as String,
         role: staffRoleFromApi(json['role']),
         warehouseName: json['warehouseName'] as String,
-        staffCode: json['staffCode'] as String?,
+        username: json['username'] as String?,
+        currencySymbol: json['currencySymbol'] as String? ?? r'$',
+        auditGranted: json['auditGranted'] == true,
       );
 }

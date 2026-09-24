@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -62,6 +64,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final stock = context.watch<StockController>();
     final staff = context.watch<SessionController>().staff;
     final item = stock.itemById(widget.stockItemId);
@@ -71,7 +74,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
     if (item == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const Center(child: Text('That product is no longer listed.')),
+        body: Center(child: Text(l10n.productNoLongerListed)),
       );
     }
 
@@ -101,7 +104,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                 const SizedBox(height: 4),
                 Text(
                   item.barcode == null
-                      ? 'No barcode on file'
+                      ? l10n.noBarcodeOnFile
                       : 'Barcode ${item.barcode}',
                   style: TextStyle(
                     fontSize: 12.5,
@@ -113,20 +116,20 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                   children: [
                     Expanded(
                       child: _Figure(
-                        label: 'On hand',
-                        value: '${item.onHand}',
+                        label: l10n.onHand,
+                        value: item.onHandText,
                       ),
                     ),
                     Expanded(
                       child: _Figure(
-                        label: 'Reserved',
+                        label: l10n.reserved,
                         value: '${item.reserved}',
                       ),
                     ),
                     Expanded(
                       child: _Figure(
-                        label: 'Free to sell',
-                        value: '${item.available}',
+                        label: l10n.freeToSell,
+                        value: item.availableText,
                         tone: tone,
                       ),
                     ),
@@ -135,13 +138,13 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                 const Divider(height: 26),
                 _Line(
                   icon: Icons.place_outlined,
-                  label: item.location ?? 'No bin assigned',
+                  label: item.location ?? l10n.noBinAssigned,
                 ),
                 const SizedBox(height: 8),
                 _Line(
                   icon: Icons.event_repeat,
                   label: item.countedAt == null
-                      ? 'Never counted'
+                      ? l10n.neverCounted
                       : 'Last counted ${relativeTime(item.countedAt!)}',
                   tone: item.countedAt == null ? colors.lowStock : null,
                 ),
@@ -156,15 +159,15 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Adjust',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          Text(
+            l10n.adjust,
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
             canAdjust
-                ? 'Record what changed, not what the total became.'
-                : 'Your role can view stock but not change it.',
+                ? l10n.recordWhatChanged
+                : l10n.roleCannotChangeStock,
             style: TextStyle(fontSize: 12.5, color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
@@ -177,7 +180,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                     Expanded(
                       child: Text(
                         _delta == 0
-                            ? 'No change'
+                            ? l10n.noChange
                             : '${signed(_delta)} → ${item.onHand + _delta} on hand',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
@@ -217,7 +220,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
           ElevatedButton.icon(
             onPressed: canAdjust && _delta != 0 ? () => _apply(item) : null,
             icon: const Icon(Icons.save_outlined),
-            label: const Text('Save adjustment'),
+            label: Text(l10n.saveAdjustment),
           ),
         ],
       ),

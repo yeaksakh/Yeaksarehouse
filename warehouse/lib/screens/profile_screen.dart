@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../state/language_config.dart';
+import '../l10n/app_localizations.dart';
+import 'printer_settings_screen.dart';
+import '../services/label_printer.dart';
 
 import '../models/staff.dart';
 import '../state/session_controller.dart';
@@ -15,6 +19,7 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final session = context.watch<SessionController>();
     final tasks = context.watch<TasksController>();
     final stock = context.watch<StockController>();
@@ -35,18 +40,19 @@ class ProfileScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          SectionCard(
+          HeroCard(
+            color: colors.hrm,
             child: Row(
               children: [
                 CircleAvatar(
-                  radius: 28,
-                  backgroundColor: scheme.primary,
+                  radius: 30,
+                  backgroundColor: Colors.white,
                   child: Text(
                     staff.initials,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
+                    style: TextStyle(
+                      color: colors.hrm,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
@@ -58,21 +64,21 @@ class ProfileScreen extends StatelessWidget {
                       Text(
                         staff.name,
                         style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         '${staff.role.label}'
-                        '${staff.staffCode == null ? '' : ' · ${staff.staffCode}'}',
-                        style: TextStyle(color: scheme.onSurfaceVariant),
+                        '${staff.username == null ? '' : ' · ${staff.username}'}',
+                        style: TextStyle(color: Colors.white.withAlpha(220)),
                       ),
                       Text(
                         staff.warehouseName,
                         style: TextStyle(
                           fontSize: 12.5,
-                          color: scheme.onSurfaceVariant,
+                          color: Colors.white.withAlpha(200),
                         ),
                       ),
                     ],
@@ -83,7 +89,7 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           const Text(
-            'Today',
+            'Shipments',
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
@@ -91,19 +97,19 @@ class ProfileScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: StatTile(
-                  icon: Icons.inventory_2,
-                  label: 'Prepared',
-                  value: '${tasks.preparedToday}',
-                  tone: colors.prepared,
+                  icon: Icons.assignment_outlined,
+                  label: 'To pack',
+                  value: '${tasks.toPackCount}',
+                  tone: colors.ordered,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: StatTile(
-                  icon: Icons.fact_check,
-                  label: 'Checked',
-                  value: '${tasks.checkedToday}',
-                  tone: colors.checked,
+                  icon: Icons.inventory_2,
+                  label: 'Packed',
+                  value: '${tasks.packedCount}',
+                  tone: colors.prepared,
                 ),
               ),
               const SizedBox(width: 12),
@@ -117,26 +123,26 @@ class ProfileScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          const Text(
-            'What you can do',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          Text(
+            l10n.whatYouCanDo,
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
           SectionCard(
             child: Column(
               children: [
                 _Permission(
-                  label: 'Prepare orders',
+                  label: l10n.acceptAndPack,
                   granted: staff.role.canPrepare,
                 ),
                 const Divider(height: 22),
                 _Permission(
-                  label: 'Sign off checks',
-                  granted: staff.role.canCheck,
+                  label: l10n.markShipmentsAudited,
+                  granted: staff.canAudit,
                 ),
                 const Divider(height: 22),
                 _Permission(
-                  label: 'Change stock numbers',
+                  label: l10n.changeStockNumbers,
                   granted: staff.role.canAdjustStock,
                 ),
               ],
@@ -160,15 +166,75 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           const SizedBox(height: 20),
+          Text(
+            l10n.settings,
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 12),
+          SectionCard(
+            child: Column(
+              children: [
+                // A segmented control rather than a toggle: a packer handed a
+                // phone in the wrong language needs to SEE which one they are
+                // picking, and "ភាសាខ្មែរ" is legible whichever is active.
+                // Stacked, not side by side: "ភាសាខ្មែរ" beside "English" beside
+                // a label overflows a small phone by about 40px. Full width for
+                // the control, label above it.
+                Row(
+                  children: [
+                    const Icon(Icons.language),
+                    const SizedBox(width: 12),
+                    Text(l10n.language),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    SegmentedButton<Locale>(
+                      segments: [
+                        ButtonSegment(
+                          value: LanguageConfig.khmer,
+                          label: Text(l10n.languageKhmer),
+                        ),
+                        ButtonSegment(
+                          value: LanguageConfig.english,
+                          label: Text(l10n.languageEnglish),
+                        ),
+                      ],
+                      selected: {context.watch<LanguageConfig>().locale},
+                      showSelectedIcon: false,
+                      onSelectionChanged: (choice) => context
+                          .read<LanguageConfig>()
+                          .setLocale(choice.first),
+                    ),
+                  ],
+                ),
+                const Divider(height: 22),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.print_outlined),
+                  title: Text(l10n.labelPrinter),
+                  subtitle: Text(l10n.chooseBluetoothPrinter),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () =>
+                      Navigator.of(context).push(MaterialPageRoute<void>(
+                    builder: (_) =>
+                        PrinterSettingsScreen(printer: context.read<LabelPrinter>()),
+                  )),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
           OutlinedButton.icon(
             onPressed: () => context.read<SessionController>().signOut(),
             icon: const Icon(Icons.logout),
-            label: const Text('Sign out'),
+            label: Text(l10n.signOut),
             style: OutlinedButton.styleFrom(foregroundColor: scheme.error),
           ),
           const SizedBox(height: 10),
           Text(
-            'Handsets are shared. Sign out at the end of your shift.',
+            l10n.handsetsAreShared,
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
           ),

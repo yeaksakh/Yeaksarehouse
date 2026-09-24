@@ -1,0 +1,450 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+
+import '../models/hrm.dart';
+import '../services/camera.dart';
+import '../services/location.dart';
+import '../state/hrm_controller.dart';
+import '../state/session_controller.dart';
+import '../theme/app_theme.dart';
+import '../utils/formatters.dart';
+import '../widgets/motion.dart';
+import '../widgets/section_card.dart';
+import 'attendance_screen.dart';
+import 'holiday_screen.dart';
+import 'leave_approvals_screen.dart';
+import 'leave_screen.dart';
+import 'payroll_screen.dart';
+
+/// The HR tab: the clock, then the same doors YeaksaMax opens -- attendance,
+/// leave, holidays, leave approvals for a manager, and pay.
+class HrmScreen extends StatefulWidget {
+  const HrmScreen({super.key});
+
+  @override
+  State<HrmScreen> createState() => _HrmScreenState();
+}
+
+class _HrmScreenState extends State<HrmScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<HrmController>().loadShift();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final staff = context.watch<SessionController>().staff;
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
+    return Scaffold(
+      appBar: AppBar(
+        titleSpacing: 20,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.hrm,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+            ),
+            if (staff != null)
+              Text(
+                staff.name,
+                style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+              ),
+          ],
+        ),
+      ),
+      body: RefreshIndicator(
+        onRefresh: () => context.read<HrmController>().loadShift(),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          children: [
+            const Appear(child: ClockCard()),
+            const SizedBox(height: 20),
+            _Door(
+              index: 1,
+              icon: Icons.calendar_today,
+              color: colors.stock,
+              title: l10n.attendance,
+              subtitle: l10n.yourClockInsAndHours,
+              onTap: () => _open(const AttendanceScreen()),
+            ),
+            _Door(
+              index: 2,
+              icon: Icons.event_busy,
+              color: colors.leave,
+              title: l10n.leave,
+              subtitle: l10n.yourRequestsAndAsk,
+              onTap: () => _open(const LeaveScreen()),
+            ),
+            _Door(
+              index: 3,
+              icon: Icons.beach_access,
+              color: colors.holiday,
+              title: l10n.holidays,
+              subtitle: l10n.shopDaysOff,
+              onTap: () => _open(const HolidayScreen()),
+            ),
+            if (staff?.isAdmin ?? false)
+              _Door(
+                index: 4,
+                icon: Icons.group,
+                color: colors.hrm,
+                title: l10n.leaveApprovals,
+                subtitle: l10n.approveOrReject,
+                onTap: () => _open(const LeaveApprovalsScreen()),
+              ),
+            _Door(
+              index: 5,
+              icon: Icons.payments_outlined,
+              color: colors.pay,
+              title: l10n.payroll,
+              subtitle: l10n.yourPayslips,
+              onTap: () => _open(const PayrollScreen()),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _open(Widget screen) =>
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+}
+
+/// The big card: whether a shift is open, since when, and the one button.
+class ClockCard extends StatelessWidget {
+  const ClockCard({super.key});
+
+  Future<void> _punch(BuildContext context) async {
+    final hrm = context.read<HrmController>();
+    final clockedIn = hrm.isClockedIn;
+    final choice = await showDialog<_PunchChoice>(
+      context: context,
+      builder: (_) => _PunchDialog(clockingIn: !clockedIn),
+    );
+    if (choice == null || !context.mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    // The fix is asked for AFTER the person confirms, and never waited on for
+    // long: the punch goes through with or without it.
+    final position = await LocationService.current();
+    final action = await hrm.clock(
+      note: choice.note,
+      position: position,
+      photoPath: choice.photoPath,
+    );
+    if (action == null) {
+      final message = hrm.error;
+      if (message != null) {
+        messenger
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(message)));
+        hrm.clearError();
+      }
+      return;
+    }
+    HapticFeedback.mediumImpact();
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(action == 'in'
+            ? 'Clocked in at ${clockTime(DateTime.now())}.'
+            : 'Clocked out at ${clockTime(DateTime.now())}.'),
+      ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final hrm = context.watch<HrmController>();
+    final colors = context.appColors;
+    final shift = hrm.openShift;
+    final clockedIn = hrm.isClockedIn;
+    // Amber while a shift is running, the app's blue when the day has not
+    // started -- the same two moods YeaksaMax's clock card wears.
+    final accent = clockedIn ? colors.prepared : colors.orders;
+
+    return HeroCard(
+      color: accent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(46),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Morph(
+                  child: Icon(
+                    clockedIn ? Icons.hourglass_bottom : Icons.login,
+                    key: ValueKey(clockedIn),
+                    size: 28,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      !hrm.shiftLoaded
+                          ? 'Checking…'
+                          : clockedIn
+                              ? l10n.clockedIn
+                              : l10n.notClockedIn,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      shift == null
+                          ? (hrm.shiftLoaded
+                              ? l10n.tapWhenYouStart
+                              : ' ')
+                          : 'Since ${dateTime(shift.clockIn)} · '
+                              '${hoursMinutes(shift.worked)}',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: Colors.white.withAlpha(220),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (hrm.error != null && !hrm.shiftLoaded) ...[
+            const SizedBox(height: 12),
+            Text(hrm.error!, style: const TextStyle(fontSize: 13)),
+          ],
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed:
+                hrm.busy || !hrm.shiftLoaded ? null : () => _punch(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: accent,
+              disabledBackgroundColor: Colors.white.withAlpha(120),
+              minimumSize: const Size.fromHeight(60),
+              elevation: 0,
+            ),
+            icon: Icon(clockedIn ? Icons.logout : Icons.login),
+            label: Text(
+              clockedIn ? l10n.clockOut : l10n.clockIn,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PunchChoice {
+  const _PunchChoice({this.note, this.photoPath});
+
+  final String? note;
+  final String? photoPath;
+}
+
+/// Confirms the punch, with an optional note and selfie -- what the website's
+/// check-in asks for.
+class _PunchDialog extends StatefulWidget {
+  const _PunchDialog({required this.clockingIn});
+
+  final bool clockingIn;
+
+  @override
+  State<_PunchDialog> createState() => _PunchDialogState();
+}
+
+class _PunchDialogState extends State<_PunchDialog> {
+  final _note = TextEditingController();
+  String? _photoPath;
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final verb = widget.clockingIn ? l10n.clockIn : l10n.clockOut;
+    return AlertDialog(
+      title: Text(verb),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            widget.clockingIn ? l10n.startShiftNow : l10n.endShiftNow,
+            style: TextStyle(color: scheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _note,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              labelText: l10n.noteOptional,
+              prefixIcon: const Icon(Icons.sticky_note_2_outlined),
+            ),
+          ),
+          const SizedBox(height: 10),
+          if (_photoPath != null)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.file(
+                File(_photoPath!),
+                height: 120,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox(height: 0),
+              ),
+            ),
+          TextButton.icon(
+            onPressed: () async {
+              final path = await Camera.takePhoto();
+              if (path != null && mounted) setState(() => _photoPath = path);
+            },
+            icon: const Icon(Icons.photo_camera_outlined),
+            label: Text(_photoPath == null ? l10n.addAPhoto : l10n.retakePhoto),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(
+            _PunchChoice(note: _note.text, photoPath: _photoPath),
+          ),
+          child: Text(verb),
+        ),
+      ],
+    );
+  }
+}
+
+class _Door extends StatelessWidget {
+  const _Door({
+    required this.index,
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final int index;
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Appear(
+      index: index,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: SectionCard(
+          onTap: onTap,
+          accent: color,
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: heroGradient(color),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: scheme.outline),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A coloured status word, for leave and pay.
+class StatusChip extends StatelessWidget {
+  const StatusChip({super.key, required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withAlpha(28),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+              color: color, fontSize: 12, fontWeight: FontWeight.w600),
+        ),
+      );
+}
+
+Color leaveColor(BuildContext context, LeaveStatus status) {
+  final colors = context.appColors;
+  return switch (status) {
+    LeaveStatus.approved => colors.inStock,
+    LeaveStatus.pending => colors.lowStock,
+    LeaveStatus.rejected || LeaveStatus.cancelled => colors.outOfStock,
+  };
+}

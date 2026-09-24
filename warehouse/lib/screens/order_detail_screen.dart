@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
+import 'printer_settings_screen.dart';
+import '../services/label_printer.dart';
+import '../services/pdf_stickers.dart';
 
 import '../models/fulfilment_stage.dart';
 import '../models/order.dart';
@@ -15,12 +21,11 @@ import '../widgets/section_card.dart';
 import '../widgets/stage_chip.dart';
 import '../widgets/stage_timeline.dart';
 
-/// One order, and the work of moving it forward.
+/// One shipment, and the work of moving it on -- the website's shipment pop-up.
 ///
-/// The same screen serves both warehouse stages. Picking is editable while the
-/// order is at `ordered`; at `prepared` the numbers freeze and the job becomes
-/// verifying them, which is the whole point of having two stages and would be
-/// undone by letting the checker quietly fix the counts.
+/// While it is `ordered` the flow is the website's: someone accepts it, that
+/// person ticks every item into the box, then marks it packed. A supervisor then
+/// marks it audited, and the rider app takes it from there.
 class OrderDetailScreen extends StatefulWidget {
   const OrderDetailScreen({super.key, required this.orderId});
 
@@ -31,8 +36,20 @@ class OrderDetailScreen extends StatefulWidget {
 }
 
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
-  /// The line a scan last landed on, so it can be flashed.
+  /// True while the label PDF is being fetched and the print sheet opened.
+  bool _printing = false;
+
+  /// The item a scan last landed on, so it can be flashed.
   String? _flashedLineId;
+
+  @override
+  void initState() {
+    super.initState();
+    // A list row carries no items: fetch them, and anything that changed since.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<TasksController>().openDetail(widget.orderId);
+    });
+  }
 
   Future<void> _handleScan(String code) async {
     final tasks = context.read<TasksController>();
@@ -42,147 +59,78 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final target = order.lineForCode(code);
     if (target == null) {
       HapticFeedback.heavyImpact();
-      if (!mounted) return;
       showScanResult(
         context,
         outcome: ScanOutcome.unknown,
-        message: '$code is not on this order.',
+        message: '$code is not on this shipment.',
       );
       return;
     }
-
-    if (target.isComplete) {
+    if (target.packed) {
       HapticFeedback.mediumImpact();
-      if (!mounted) return;
       setState(() => _flashedLineId = target.id);
       showScanResult(
         context,
         outcome: ScanOutcome.alreadyComplete,
-        message: '${target.name}: all ${target.quantity} already picked.',
+        message: '${target.name} is already ticked.',
       );
       return;
     }
 
-    await tasks.applyScan(widget.orderId, code);
-    HapticFeedback.selectionClick();
+    final ticked =
+        await tasks.setLinePacked(widget.orderId, target.id, packed: true);
     if (!mounted) return;
+    if (!ticked) {
+      _showError(tasks);
+      return;
+    }
+    HapticFeedback.selectionClick();
     setState(() => _flashedLineId = target.id);
     showScanResult(
       context,
       outcome: ScanOutcome.accepted,
-      message: '${target.name}  ${target.picked}/${target.quantity}',
+      message: '${target.name} ticked',
     );
   }
 
-  Future<void> _advance(Order order) async {
+  void _showError(TasksController tasks) {
+    final message = tasks.error;
+    if (message == null) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+    tasks.clearError();
+  }
+
+  /// Runs one move, then says what happened -- the server's own words when it
+  /// refused, so "Already accepted by Sok Dara." reaches the person as written.
+  Future<void> _run(
+    Future<bool> Function(TasksController tasks) move, {
+    String? done,
+    bool close = false,
+  }) async {
     final tasks = context.read<TasksController>();
-    final staff = context.read<SessionController>().staff;
-    if (staff == null) return;
-
-    // A short pick needs a reason before it can move on. Ask for it here rather
-    // than only refusing, so the packer is not left guessing what to do next.
-    if (order.hasShortage && (order.staffNote?.isEmpty ?? true)) {
-      final note = await _promptNote(order);
-      if (note == null || note.trim().isEmpty) return;
-      await tasks.setNote(order.id, note);
-    }
-
-    final moved = await tasks.advance(order.id, staff: staff);
+    // Resolved before the await: after it this context may be gone.
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final moved = await move(tasks);
     if (!mounted) return;
-
     if (!moved) {
-      final message = tasks.error;
-      if (message != null) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(message)));
-        tasks.clearError();
-      }
+      _showError(tasks);
       return;
     }
-
     HapticFeedback.mediumImpact();
-    final now = tasks.orderById(order.id)?.stage;
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(
-            now == FulfilmentStage.checked
-                ? '${order.code} checked — waiting for a driver.'
-                : '${order.code} prepared — sent for checking.',
-          ),
-        ),
-      );
-  }
-
-  Future<void> _sendBack(Order order) async {
-    final tasks = context.read<TasksController>();
-    final staff = context.read<SessionController>().staff;
-    if (staff == null) return;
-
-    final note = await _promptNote(
-      order,
-      title: 'Send back to packing',
-      hint: 'What is wrong with it?',
-    );
-    if (note == null) return;
-    await tasks.setNote(order.id, note);
-
-    final moved = await tasks.sendBack(order.id, staff: staff);
-    if (!mounted) return;
-    if (!moved) {
-      final message = tasks.error;
-      if (message != null) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(message)));
-        tasks.clearError();
-      }
-      return;
+    if (close) navigator.pop();
+    if (done != null) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(done)));
     }
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text('${order.code} sent back to packing.')),
-      );
-  }
-
-  Future<String?> _promptNote(
-    Order order, {
-    String title = 'Add a note',
-    String hint = 'Why is this order short?',
-  }) {
-    final controller = TextEditingController(text: order.staffNote ?? '');
-    return showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(title),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLines: 3,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: InputDecoration(hintText: hint),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(controller.text),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final tasks = context.watch<TasksController>();
     final staff = context.watch<SessionController>().staff;
     final order = tasks.orderById(widget.orderId);
@@ -192,15 +140,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     if (order == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const Center(child: Text('That order is no longer here.')),
+        body: Center(child: Text(l10n.shipmentNoLongerHere)),
       );
     }
 
-    final picking = order.stage == FulfilmentStage.ordered;
-    final actionLabel = order.stage.staffActionLabel;
-    final canAct = actionLabel != null &&
-        staff != null &&
-        (order.stage != FulfilmentStage.prepared || staff.role.canCheck);
+    final stage = order.stage;
+    final mine = order.isAcceptedBy(staff?.id);
+    final packing = stage == FulfilmentStage.ordered && mine;
+    final waiting = tasks.busy;
 
     return Scaffold(
       appBar: AppBar(
@@ -208,7 +155,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: Center(child: StageChip(stage: order.stage)),
+            child: Center(child: StageChip(stage: stage)),
           ),
         ],
       ),
@@ -219,17 +166,64 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                StageTimeline(stage: order.stage),
+                StageTimeline(stage: stage),
                 const Divider(height: 28),
-                _Row(
-                  icon: Icons.person_outline,
-                  label: order.customerName,
-                ),
-                const SizedBox(height: 8),
-                _Row(
-                  icon: Icons.location_on_outlined,
-                  label: order.shippingAddress,
-                ),
+                _Row(icon: Icons.person_outline, label: order.customerName),
+                if (order.customerPhone.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  _Row(icon: Icons.phone_outlined, label: order.customerPhone),
+                ],
+                if (order.shippingAddress.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  _Row(
+                    icon: Icons.location_on_outlined,
+                    label: order.shippingAddress,
+                  ),
+                ],
+                if (order.locationName.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  _Row(icon: Icons.store_outlined, label: order.locationName),
+                ],
+                if (order.isAccepted) ...[
+                  const SizedBox(height: 8),
+                  _Row(
+                    icon: Icons.assignment_ind,
+                    label: 'Accepted by ${order.preparedBy!.name}'
+                        '${mine ? ' (you)' : ''}'
+                        '${order.acceptedAt == null ? '' : ' · ${dateTime(order.acceptedAt!)}'}',
+                    tone: mine ? colors.checked : null,
+                  ),
+                ],
+                if (order.packedAt != null) ...[
+                  const SizedBox(height: 8),
+                  _Row(
+                    icon: Icons.inventory_2_outlined,
+                    label:
+                        '${order.packedByName.isEmpty ? l10n.stagePacked : l10n.packedByName(order.packedByName)}'
+                        ' · ${dateTime(order.packedAt!)}',
+                  ),
+                ],
+                if (order.auditedAt != null) ...[
+                  const SizedBox(height: 8),
+                  _Row(
+                    icon: Icons.fact_check_outlined,
+                    label:
+                        '${order.auditedByName.isEmpty ? l10n.stageAudited : l10n.auditedByName(order.auditedByName)}'
+                        ' · ${dateTime(order.auditedAt!)}',
+                  ),
+                ],
+                // Who took it from here -- a rider who accepted it in YeaksaBoy.
+                if (order.hasRider) ...[
+                  const SizedBox(height: 8),
+                  _Row(
+                    icon: Icons.two_wheeler,
+                    label: l10n.riderName(order.riderName) +
+                        (order.riderPhone.isEmpty
+                            ? ''
+                            : ' · ${order.riderPhone}'),
+                    tone: colors.checked,
+                  ),
+                ],
                 const SizedBox(height: 8),
                 _Row(
                   icon: order.isCashOnDelivery
@@ -244,17 +238,41 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   label: 'Ordered ${relativeTime(order.placedAt)}'
                       ' · ${clockTime(order.placedAt)}',
                 ),
+                if (order.note.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  _Row(icon: Icons.sticky_note_2_outlined, label: order.note),
+                ],
               ],
             ),
           ),
+          if (stage == FulfilmentStage.ordered && !order.isAccepted) ...[
+            const SizedBox(height: 12),
+            _Banner(
+              icon: Icons.assignment_ind_outlined,
+              color: colors.ordered,
+              title: l10n.notAcceptedYet,
+              message: 'Accept it to start packing. The website shows you as '
+                  'the one preparing it.',
+            ),
+          ],
+          if (stage == FulfilmentStage.ordered &&
+              order.isAccepted &&
+              !mine) ...[
+            const SizedBox(height: 12),
+            _Banner(
+              icon: Icons.person_pin_outlined,
+              color: scheme.onSurfaceVariant,
+              title: 'Being packed by ${order.preparedBy!.name}',
+              message: l10n.onlyAccepterTicks,
+            ),
+          ],
           if (order.isCashOnDelivery) ...[
             const SizedBox(height: 12),
             _Banner(
               icon: Icons.payments,
               color: colors.prepared,
-              title: 'Cash on delivery',
-              message:
-                  'The rider collects at the door. Put the invoice in the box.',
+              title: l10n.collectOnDelivery,
+              message: l10n.collectOnDeliveryBody,
             ),
           ],
           const SizedBox(height: 20),
@@ -262,127 +280,371 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             children: [
               Expanded(
                 child: Text(
-                  picking ? 'Pick these' : 'Check these',
+                  l10n.items,
                   style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                  ),
+                      fontSize: 17, fontWeight: FontWeight.w700),
                 ),
               ),
               Text(
-                '${order.pickedCount} / ${order.unitCount}',
+                '${order.packedCount} / ${order.lineCount} packed',
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
-                  color: order.isFullyPicked ? colors.inStock : colors.lowStock,
+                  color: order.isFullyPacked ? colors.inStock : colors.lowStock,
                 ),
               ),
             ],
           ),
-          if (picking) ...[
+          if (packing) ...[
             const SizedBox(height: 12),
-            ScanField(onScan: _handleScan),
+            // Not focused on arrival: on a phone that raises the keyboard,
+            // which covered the very items the packer came to tick. A wedge
+            // scanner needs the box tapped once; it keeps focus after each scan.
+            ScanField(
+              onScan: _handleScan,
+              hintText: l10n.scanOrTypeSku,
+              autofocus: false,
+            ),
             const SizedBox(height: 6),
             Text(
-              'Each scan adds one. Or set the number by hand.',
+              l10n.tapAnItemToTick,
               style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
             ),
           ],
           const SizedBox(height: 12),
+          if (!order.hasDetail)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CircularProgressIndicator()),
+            ),
           for (final line in order.lines) ...[
             PickLineTile(
               line: line,
-              enabled: picking,
               highlighted: _flashedLineId == line.id,
-              onPickedChanged: (value) => context
-                  .read<TasksController>()
-                  .setLinePicked(order.id, line.id, value),
+              onPackedChanged: packing && !waiting
+                  ? (value) => _run((tasks) =>
+                      tasks.setLinePacked(order.id, line.id, packed: value))
+                  : null,
             ),
             const SizedBox(height: 10),
           ],
-          if (order.hasShortage) ...[
-            const SizedBox(height: 2),
-            _Banner(
-              icon: Icons.warning_amber,
-              color: colors.lowStock,
-              title: 'Short by ${order.unitCount - order.pickedCount}',
-              message: order.staffNote == null
-                  ? 'Add a note saying why before this order moves on.'
-                  : order.staffNote!,
-            ),
-          ],
-          if (order.staffNote != null && !order.hasShortage) ...[
-            const SizedBox(height: 2),
-            _Banner(
-              icon: Icons.sticky_note_2_outlined,
-              color: scheme.primary,
-              title: 'Note',
-              message: order.staffNote!,
-            ),
-          ],
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: () async {
-              final note = await _promptNote(
-                order,
-                title: order.staffNote == null ? 'Add a note' : 'Edit note',
-                hint: 'Damaged, substituted, short…',
-              );
-              if (note == null) return;
-              if (!context.mounted) return;
-              await context.read<TasksController>().setNote(order.id, note);
-            },
-            icon: const Icon(Icons.edit_note),
-            label: Text(order.staffNote == null ? 'Add a note' : 'Edit note'),
-          ),
-          if (order.stage == FulfilmentStage.prepared &&
-              (staff?.role.canCheck ?? false)) ...[
+          if (order.photos.isNotEmpty) ...[
             const SizedBox(height: 10),
-            OutlinedButton.icon(
-              onPressed: () => _sendBack(order),
-              icon: const Icon(Icons.undo),
-              label: const Text('Send back to packing'),
-              style: OutlinedButton.styleFrom(foregroundColor: scheme.error),
+            Text(
+              l10n.photos,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final photo in order.photos)
+                  SizedBox(
+                    width: 104,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // The thumbnail in the grid; tapping opens the full
+                        // picture, zoomable.
+                        GestureDetector(
+                          onTap: () => showDialog<void>(
+                            context: context,
+                            builder: (_) => Dialog(
+                              insetPadding: const EdgeInsets.all(12),
+                              child: InteractiveViewer(
+                                child: Image.network(photo.url,
+                                    fit: BoxFit.contain),
+                              ),
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              photo.previewUrl,
+                              width: 104,
+                              height: 104,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 104,
+                                height: 104,
+                                color: scheme.surfaceContainerHighest,
+                                child: Icon(Icons.broken_image,
+                                    color: scheme.outline),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // Which step it is evidence for, and when it went up.
+                        Text(
+                          photo.stage?.label ?? l10n.photo,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: photo.stage == null
+                                ? scheme.onSurfaceVariant
+                                : colors.forStage(photo.stage!),
+                          ),
+                        ),
+                        if (photo.takenAt != null)
+                          Text(
+                            dateTime(photo.takenAt!),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
           ],
           const SizedBox(height: 20),
-          if (canAct)
-            ElevatedButton.icon(
-              onPressed: () => _advance(order),
-              icon: Icon(
-                order.stage == FulfilmentStage.ordered
-                    ? Icons.inventory_2
-                    : Icons.fact_check,
-              ),
-              label: Text(actionLabel),
-            )
-          else if (order.stage == FulfilmentStage.prepared)
-            _Banner(
-              icon: Icons.lock_outline,
-              color: scheme.onSurfaceVariant,
-              title: 'Waiting for a checker',
-              message:
-                  'A checker or supervisor signs this off. You packed it, so '
-                  'someone else confirms it.',
-            )
-          else if (order.stage == FulfilmentStage.checked)
-            _Banner(
-              icon: Icons.local_shipping,
-              color: colors.checked,
-              title: 'Packed and waiting',
-              message:
-                  'The rider marks this picked up when they collect it, from '
-                  'the driver app.',
-            )
-          else
-            _Banner(
-              icon: Icons.done_all,
-              color: colors.delivered,
-              title: order.stage.label,
-              message: 'This order has left the warehouse.',
-            ),
+          OutlinedButton.icon(
+            onPressed: _printing ? null : () => _printLabels(order),
+            icon: _printing
+                ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.print_outlined),
+            label: Text(_printing ? l10n.preparingLabels : l10n.printBoxLabels),
+          ),
+          const SizedBox(height: 10),
+          ..._actions(order,
+              l10n: l10n, staff: staff, mine: mine, waiting: waiting),
         ],
       ),
     );
+  }
+
+  /// Ask where the stickers should go, then send them.
+  ///
+  /// Two routes, because warehouses have both kinds of machine. The Bluetooth
+  /// one draws each sticker on the phone and sends raster rows, which is all a
+  /// thermal label printer understands. The system dialog takes the server's
+  /// PDF and reaches Wi-Fi and USB printers, and offers "Save as PDF" for a
+  /// packer with no printer at hand.
+  Future<void> _printLabels(Order order) async {
+    final l10n = AppLocalizations.of(context);
+    final choice = await showModalBottomSheet<_PrintRoute>(
+      context: context,
+      builder: (sheet) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.bluetooth),
+              title: Text(l10n.bluetoothLabelPrinter),
+              subtitle: Text(l10n.theWarehouseStickerPrinter),
+              onTap: () => Navigator.of(sheet).pop(_PrintRoute.bluetooth),
+            ),
+            ListTile(
+              leading: const Icon(Icons.print_outlined),
+              title: Text(l10n.otherPrinterOrPdf),
+              subtitle: Text(l10n.wifiUsbOrKeepCopy),
+              onTap: () => Navigator.of(sheet).pop(_PrintRoute.system),
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings_outlined),
+              title: Text(l10n.chooseTheLabelPrinter),
+              onTap: () => Navigator.of(sheet).pop(_PrintRoute.settings),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !mounted) return;
+
+    switch (choice) {
+      case _PrintRoute.settings:
+        await Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (_) =>
+              PrinterSettingsScreen(printer: context.read<LabelPrinter>()),
+        ));
+      case _PrintRoute.system:
+        await _printViaSystem(order);
+      case _PrintRoute.bluetooth:
+        await _printViaBluetooth(order);
+    }
+  }
+
+  Future<void> _printViaSystem(Order order) async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _printing = true);
+    try {
+      final pdf = await context.read<TasksController>().labels(order.id);
+      await Printing.layoutPdf(
+          onLayout: (_) async => pdf, name: 'labels-${order.code}');
+    } catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text('$error')));
+    } finally {
+      if (mounted) setState(() => _printing = false);
+    }
+  }
+
+  /// One sticker at a time, in order, stopping at the first refusal.
+  ///
+  /// Stopping matters: if the printer runs out of labels on sticker three of
+  /// six, carrying on sends three more into a machine that cannot print them
+  /// and the packer has no idea which ones are missing.
+  Future<void> _printViaBluetooth(Order order) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    // Resolved before the first await: the loop below crosses several, and
+    // reading the context after one is how a disposed screen ends up handing
+    // back a printer from a page that no longer exists.
+    final printer = context.read<LabelPrinter>();
+    setState(() => _printing = true);
+    try {
+      // The same PDF "Save as PDF" gives, page by page, so the sticker that
+      // comes out of the printer is exactly the one on screen.
+      final pdf = await context.read<TasksController>().labels(order.id);
+      final stickers = await stickersFromPdf(pdf);
+      if (stickers.isEmpty) {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.nothingToLabel)));
+        return;
+      }
+      var sent = 0;
+      for (final sticker in stickers) {
+        final result = await printer.printLabel(sticker);
+        if (!result.succeeded) {
+          messenger.showSnackBar(SnackBar(
+              content: Text('${result.message} '
+                  '($sent of ${stickers.length} printed)')));
+          return;
+        }
+        sent++;
+      }
+      messenger.showSnackBar(
+          SnackBar(content: Text('$sent label${sent == 1 ? '' : 's'} sent.')));
+    } catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text('$error')));
+    } finally {
+      if (mounted) setState(() => _printing = false);
+    }
+  }
+
+  List<Widget> _actions(
+    Order order, {
+    required AppLocalizations l10n,
+    required Staff? staff,
+    required bool mine,
+    required bool waiting,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+    final stage = order.stage;
+
+    // Printing is useful at every stage -- while packing, and again if a
+    // sticker is torn off in the van -- so it is not tied to one of the
+    // branches below. Added by the caller, not here, for that reason.
+
+    if (stage == FulfilmentStage.ordered && !order.isAccepted) {
+      return [
+        ElevatedButton.icon(
+          onPressed: waiting
+              ? null
+              : () => _run(
+                    (tasks) => tasks.accept(order.id),
+                    done: 'You are packing ${order.code}.',
+                  ),
+          icon: const Icon(Icons.assignment_ind),
+          label: Text(l10n.acceptToPack),
+        ),
+      ];
+    }
+
+    if (stage == FulfilmentStage.ordered && mine) {
+      return [
+        ElevatedButton.icon(
+          onPressed: waiting || !order.isFullyPacked
+              ? null
+              : () => _run(
+                    (tasks) => tasks.markPacked(order.id),
+                    done: '${order.code} packed — waiting for audit.',
+                    close: true,
+                  ),
+          icon: const Icon(Icons.inventory_2),
+          label: Text(l10n.markPacked),
+        ),
+        if (!order.isFullyPacked && order.hasDetail) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Tick every item first (${order.unpackedCount} left).',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+          ),
+        ],
+        // The server refuses to hand back a shipment once an item is ticked,
+        // so the button only exists while it would work.
+        if (order.packedCount == 0) ...[
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: waiting
+                ? null
+                : () => _run(
+                      (tasks) => tasks.release(order.id),
+                      done: '${order.code} handed back.',
+                      close: true,
+                    ),
+            icon: const Icon(Icons.undo),
+            label: Text(l10n.handBack),
+          ),
+        ],
+      ];
+    }
+
+    if (stage == FulfilmentStage.ordered) return const [];
+
+    if (stage == FulfilmentStage.packed) {
+      if (staff != null && staff.canAudit) {
+        return [
+          ElevatedButton.icon(
+            onPressed: waiting
+                ? null
+                : () => _run(
+                      (tasks) => tasks.markAudited(order.id, staff: staff),
+                      done: '${order.code} audited — waiting for the rider.',
+                      close: true,
+                    ),
+            icon: const Icon(Icons.fact_check),
+            label: Text(l10n.markAudited),
+          ),
+        ];
+      }
+      return [
+        _Banner(
+          icon: Icons.lock_outline,
+          color: scheme.onSurfaceVariant,
+          title: l10n.waitingForAudit,
+          message: 'A supervisor checks the packed shipment before the rider '
+              'takes it.',
+        ),
+      ];
+    }
+
+    if (stage == FulfilmentStage.audited) {
+      return [
+        _Banner(
+          icon: Icons.local_shipping,
+          color: colors.checked,
+          title: l10n.waitingForRider,
+          message: l10n.waitingForRiderBody,
+        ),
+      ];
+    }
+
+    return [
+      _Banner(
+        icon: Icons.done_all,
+        color: colors.forStage(stage),
+        title: stage.label,
+        message: l10n.shipmentHasLeft,
+      ),
+    ];
   }
 }
 
@@ -463,3 +725,6 @@ class _Banner extends StatelessWidget {
     );
   }
 }
+
+/// Where a packer wants this parcel's stickers to go.
+enum _PrintRoute { bluetooth, system, settings }
