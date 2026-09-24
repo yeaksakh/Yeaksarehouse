@@ -6,23 +6,13 @@ name: warehouse
 
 on:
   push:
-    paths:
-      - 'warehouse/**'
-      - '.github/workflows/warehouse.yml'
   pull_request:
-    paths:
-      - 'warehouse/**'
-      - '.github/workflows/warehouse.yml'
   # So a build can be kicked off by hand without pushing anything.
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: warehouse
-
     steps:
       - uses: actions/checkout@v4
 
@@ -54,5 +44,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: warehouse-debug-apk
-          path: warehouse/build/app/outputs/flutter-apk/app-debug.apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error

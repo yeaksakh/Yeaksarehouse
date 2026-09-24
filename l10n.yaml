@@ -1,6 +1,6 @@
 # Khmer is what the warehouse floor reads; English is kept as the template
 # because the source strings are written in it. Same arrangement as the rider
-# app (`delivery_boy`), so the two stay easy to compare.
+# app (YeaksaBoy), so the two stay easy to compare.
 arb-dir: lib/l10n
 template-arb-file: app_en.arb
 output-localization-file: app_localizations.dart

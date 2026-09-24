@@ -2,7 +2,7 @@
 
 A Flutter app for warehouse staff: move orders through the shop's fulfilment
 stages, and scan or count stock. The floor-side companion to the
-[`delivery_boy`](../delivery_boy) rider app.
+YeaksaBoy rider app (its own repo).
 
 | Queues | Preparing an order | Stock |
 |---|---|---|
@@ -16,7 +16,7 @@ them and draws its timeline from them. This app owns the middle two:
 
 ```
 ordered  →  prepared  →  checked  │  picked_up  →  delivered
-└────── this app (warehouse) ─────┘  └── delivery_boy (rider) ──┘
+└────── this app (warehouse) ─────┘  └──── YeaksaBoy (rider) ────┘
 ```
 
 The handoff is `checked` → `picked_up`. Staff pack an order and sign it off;
