@@ -21,4 +21,19 @@ class Camera {
     );
     return shot?.path;
   }
+
+  /// Photographs a document with the back camera and returns its path, or null
+  /// if the person backed out. Larger and sharper than [takePhoto]: the text on
+  /// a paper has to stay readable.
+  static Future<String?> Function() takeDocument = _document;
+
+  static Future<String?> _document() async {
+    final shot = await ImagePicker().pickImage(
+      source: ImageSource.camera,
+      maxWidth: 2000,
+      imageQuality: 85,
+      preferredCameraDevice: CameraDevice.rear,
+    );
+    return shot?.path;
+  }
 }

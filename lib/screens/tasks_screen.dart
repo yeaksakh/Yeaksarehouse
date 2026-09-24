@@ -12,11 +12,9 @@ import '../state/tasks_controller.dart';
 import '../models/order.dart';
 import '../models/staff.dart';
 import '../theme/app_theme.dart';
-import '../utils/formatters.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/motion.dart';
 import '../widgets/order_task_card.dart';
-import '../widgets/section_card.dart';
 import 'order_detail_screen.dart';
 
 /// The shipments, one tab per status, as the website's /shipments page filters
@@ -74,12 +72,10 @@ class _TasksScreenState extends State<TasksScreen> {
     final staff = session.staff;
 
     final l10n = AppLocalizations.of(context);
-    final workCount =
-        kStaffQueues.fold<int>(0, (n, s) => n + tasks.queueCount(s));
+    final groups = _stageGroups(tasks, l10n, context.appColors);
     return DefaultTabController(
-      // Laid out like YeaksaBoy: one Work board with every stage stacked in its
-      // own colour, and History for what riders have taken.
-      length: 2,
+      // One tab per status, each in its own colour.
+      length: groups.length,
       child: Scaffold(
         appBar: AppBar(
           titleSpacing: 20,
@@ -127,23 +123,14 @@ class _TasksScreenState extends State<TasksScreen> {
           ],
           bottom: TabBar(
             tabs: [
-              _LabelledTab(
-                label: l10n.workTab,
-                count: workCount,
-                color: context.appColors.ordered,
-              ),
-              _LabelledTab(
-                label: l10n.historyTab,
-                count: tasks.ridersCount,
-                color: context.appColors.pickedUp,
-              ),
+              for (final g in groups)
+                _LabelledTab(label: g.title, count: g.count, color: g.color),
             ],
           ),
         ),
-        body: const TabBarView(
+        body: TabBarView(
           children: [
-            _WorkBoard(),
-            _RidersQueue(),
+            for (final g in groups) _StageBoard(groupKey: g.key),
           ],
         ),
       ),
@@ -151,14 +138,70 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 }
 
-/// The Work tab: every stage the warehouse still acts on, top to bottom in the
-/// order a shipment moves -- Ordered, Packed, Audited -- each in its own colour,
-/// each card with its next step. The newest few of each stage; "See all" opens
-/// the stage's full list (Ordered can hold thousands of old sales).
-class _WorkBoard extends StatelessWidget {
-  const _WorkBoard();
+typedef _StageGroup = ({
+  FulfilmentStage stage,
+  String title,
+  List<Order> orders,
+  int count,
+  Color color,
+  String key,
+});
 
-  static const _perStage = 10;
+/// The four statuses the warehouse works, in the order a shipment moves:
+/// Ordered, Packing (ordered and accepted by a packer), Packed, Audited.
+///
+/// An order leaves its section once somebody has it in hand: an Ordered one
+/// with a packer moves to Packing, an Audited one a rider has taken leaves the
+/// board. Counts are the server's, less the ones moved out of that section.
+List<_StageGroup> _stageGroups(
+    TasksController tasks, AppLocalizations l10n, AppColors colors) {
+  final ordered = tasks.queue(FulfilmentStage.ordered);
+  final packing = ordered.where((o) => o.isAccepted).toList();
+  final audited = tasks.queue(FulfilmentStage.audited);
+  final taken = audited.where((o) => o.hasRider).length;
+  return [
+    (
+      stage: FulfilmentStage.ordered,
+      title: l10n.stageOrdered,
+      orders: ordered.where((o) => !o.isAccepted).toList(),
+      count: tasks.queueCount(FulfilmentStage.ordered) - packing.length,
+      color: colors.forStage(FulfilmentStage.ordered),
+      key: 'ordered',
+    ),
+    (
+      stage: FulfilmentStage.ordered,
+      title: l10n.stagePacking,
+      orders: packing,
+      count: packing.length,
+      color: colors.packing,
+      key: 'packing',
+    ),
+    (
+      stage: FulfilmentStage.packed,
+      title: l10n.stagePacked,
+      orders: tasks.queue(FulfilmentStage.packed),
+      count: tasks.queueCount(FulfilmentStage.packed),
+      color: colors.forStage(FulfilmentStage.packed),
+      key: 'packed',
+    ),
+    (
+      stage: FulfilmentStage.audited,
+      title: l10n.stageAudited,
+      orders: audited.where((o) => !o.hasRider).toList(),
+      count: tasks.queueCount(FulfilmentStage.audited) - taken,
+      color: colors.forStage(FulfilmentStage.audited),
+      key: 'audited',
+    ),
+  ];
+}
+
+/// One status's tab: its orders, each card with its next step. "See all" opens
+/// the stage's full list when the server holds more than were loaded (Ordered
+/// can hold thousands of old sales).
+class _StageBoard extends StatelessWidget {
+  const _StageBoard({required this.groupKey});
+
+  final String groupKey;
 
   @override
   Widget build(BuildContext context) {
@@ -246,88 +289,41 @@ class _WorkBoard extends StatelessWidget {
       }
     }
 
-    // An order leaves its stage's section once somebody has it in hand: an
-    // Ordered one with a packer moves to Packing, an Audited one a rider has
-    // taken leaves the board for History. Counts are the server's, less the
-    // ones moved out of that section.
-    final ordered = tasks.queue(FulfilmentStage.ordered);
-    final packing = ordered.where((o) => o.isAccepted).toList();
-    final audited = tasks.queue(FulfilmentStage.audited);
-    final taken = audited.where((o) => o.hasRider).length;
-    final groups = [
-      (
-        stage: FulfilmentStage.ordered,
-        title: l10n.stageOrdered,
-        orders: ordered.where((o) => !o.isAccepted).toList(),
-        count: tasks.queueCount(FulfilmentStage.ordered) - packing.length,
-        color: colors.forStage(FulfilmentStage.ordered),
-        key: 'ordered',
-      ),
-      (
-        stage: FulfilmentStage.ordered,
-        title: l10n.stagePacking,
-        orders: packing,
-        count: packing.length,
-        color: colors.packing,
-        key: 'packing',
-      ),
-      (
-        stage: FulfilmentStage.packed,
-        title: l10n.stagePacked,
-        orders: tasks.queue(FulfilmentStage.packed),
-        count: tasks.queueCount(FulfilmentStage.packed),
-        color: colors.forStage(FulfilmentStage.packed),
-        key: 'packed',
-      ),
-      (
-        stage: FulfilmentStage.audited,
-        title: l10n.stageAudited,
-        orders: audited.where((o) => !o.hasRider).toList(),
-        count: tasks.queueCount(FulfilmentStage.audited) - taken,
-        color: colors.forStage(FulfilmentStage.audited),
-        key: 'audited',
-      ),
-    ];
+    final group = _stageGroups(tasks, l10n, colors)
+        .firstWhere((g) => g.key == groupKey);
+    final orders = group.orders;
+    final count = group.count < orders.length ? orders.length : group.count;
+    final color = group.color;
+    final stage = group.stage;
 
     final sections = <Widget>[];
-    for (final group in groups) {
-      final orders = group.orders;
-      final count = group.count < orders.length ? orders.length : group.count;
-      if (orders.isEmpty) continue;
-      final color = group.color;
-      final stage = group.stage;
-      sections.add(_StageHeader(group.title, count, color));
-      sections.add(const SizedBox(height: 10));
-      for (final (i, order) in orders.take(_perStage).indexed) {
-        sections.add(Appear(
-          key: ValueKey('work-${group.key}-${order.id}'),
-          index: i,
-          child: OrderTaskCard(
-            order: order,
-            staffId: staff?.id,
-            onTap: () => open(order),
-            action: nextStep(order),
-          ),
-        ));
-        sections.add(const SizedBox(height: 12));
-      }
-      if (count > _perStage) {
-        sections.add(Align(
-          alignment: Alignment.centerRight,
-          child: TextButton.icon(
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => Scaffold(
-                appBar: AppBar(title: Text(title(stage))),
-                body: _Queue(stage: stage),
-              ),
-            )),
-            icon: Icon(Icons.chevron_right, color: color),
-            label:
-                Text(l10n.seeAllCount(count), style: TextStyle(color: color)),
-          ),
-        ));
-      }
+    for (final (i, order) in orders.indexed) {
+      sections.add(Appear(
+        key: ValueKey('work-${group.key}-${order.id}'),
+        index: i,
+        child: OrderTaskCard(
+          order: order,
+          staffId: staff?.id,
+          onTap: () => open(order),
+          action: nextStep(order),
+        ),
+      ));
       sections.add(const SizedBox(height: 12));
+    }
+    if (orders.isNotEmpty && count > orders.length) {
+      sections.add(Align(
+        alignment: Alignment.centerRight,
+        child: TextButton.icon(
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: Text(title(stage))),
+              body: _Queue(stage: stage),
+            ),
+          )),
+          icon: Icon(Icons.chevron_right, color: color),
+          label: Text(l10n.seeAllCount(count), style: TextStyle(color: color)),
+        ),
+      ));
     }
 
     return RefreshIndicator(
@@ -372,45 +368,6 @@ class _WorkBoard extends StatelessWidget {
   }
 }
 
-/// A stage heading: a dot and the name in the stage's colour, and the count.
-class _StageHeader extends StatelessWidget {
-  const _StageHeader(this.title, this.count, this.color);
-
-  final String title;
-  final int count;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              title,
-              style: TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w700, color: color),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: color.withAlpha(36),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text('$count',
-                style: TextStyle(
-                    color: color, fontWeight: FontWeight.w700, fontSize: 12)),
-          ),
-        ],
-      );
-}
-
 class _LabelledTab extends StatelessWidget {
   const _LabelledTab(
       {required this.label, required this.count, required this.color});
@@ -426,7 +383,11 @@ class _LabelledTab extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          // Shrinks to fit rather than cutting the name short with "...".
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(label, maxLines: 1, softWrap: false),
+          ),
           const SizedBox(height: 4),
           // Kept at its height when the count is 0, so the labels line up.
           SizedBox(height: 18, child: _Badge(count: count, color: color)),
@@ -546,156 +507,3 @@ class _Queue extends StatelessWidget {
   }
 }
 
-/// The Riders tab: each shipment a rider has taken, with the rider and their
-/// latest step -- accepted, picked up, on the way, delivered (today).
-class _RidersQueue extends StatelessWidget {
-  const _RidersQueue();
-
-  @override
-  Widget build(BuildContext context) {
-    final tasks = context.watch<TasksController>();
-    final l10n = AppLocalizations.of(context);
-    final orders = tasks.riders;
-
-    if (!tasks.ridersLoaded && tasks.error == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    return RefreshIndicator(
-      onRefresh: () => context.read<TasksController>().loadRiders(),
-      child: orders.isEmpty
-          ? ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                SizedBox(
-                  height: MediaQuery.sizeOf(context).height * 0.6,
-                  child: EmptyState(
-                    icon: tasks.ridersLoaded
-                        ? Icons.two_wheeler
-                        : Icons.cloud_off,
-                    title: !tasks.ridersLoaded
-                        ? 'Could not load shipments'
-                        : tasks.query.isNotEmpty
-                            ? l10n.noMatchTitle
-                            : l10n.noRidersTitle,
-                    message: tasks.ridersLoaded
-                        ? (tasks.query.isNotEmpty
-                            ? l10n.noMatchBody(tasks.query)
-                            : l10n.noRidersBody)
-                        : '${tasks.error ?? ''}\nPull down to try again.',
-                  ),
-                ),
-              ],
-            )
-          : ListView.separated(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              itemCount: orders.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final order = orders[index];
-                return Appear(
-                  key: ValueKey('rider-${order.id}'),
-                  index: index,
-                  child: _RiderCard(order: order),
-                );
-              },
-            ),
-    );
-  }
-}
-
-class _RiderCard extends StatelessWidget {
-  const _RiderCard({required this.order});
-
-  final Order order;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final colors = context.appColors;
-    final scheme = Theme.of(context).colorScheme;
-    final (label, color, icon) = switch (order.riderStage) {
-      'picked_up' => (
-          l10n.riderStagePickedUp,
-          colors.pickedUp,
-          Icons.inventory_2
-        ),
-      'on_the_way' => (
-          l10n.riderStageOnTheWay,
-          colors.pickedUp,
-          Icons.two_wheeler
-        ),
-      'delivered' => (
-          l10n.riderStageDelivered,
-          colors.delivered,
-          Icons.check_circle
-        ),
-      _ => (
-          l10n.riderStageAccepted,
-          colors.checked,
-          Icons.assignment_turned_in
-        ),
-    };
-    return SectionCard(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => OrderDetailScreen(orderId: order.id)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(order.code,
-                    style: const TextStyle(fontWeight: FontWeight.w700)),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: color.withAlpha(36),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, size: 14, color: color),
-                    const SizedBox(width: 5),
-                    Text(label,
-                        style: TextStyle(
-                            color: color,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(order.customerName,
-              style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant)),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Icon(Icons.two_wheeler, size: 18, color: color),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  [
-                    order.riderName,
-                    if (order.riderPhone.isNotEmpty) order.riderPhone
-                  ].join(' · '),
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ),
-              if (order.riderStageAt != null)
-                Text(dateTime(order.riderStageAt!),
-                    style: TextStyle(
-                        fontSize: 12, color: scheme.onSurfaceVariant)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}

@@ -24,6 +24,7 @@ Future<void> pumpApp(WidgetTester tester,
   // No location service and no camera under flutter_test.
   LocationService.current = () async => null;
   Camera.takePhoto = () async => null;
+  Camera.takeDocument = () async => null;
 
   await tester.pumpWidget(
     WarehouseApp(
@@ -54,21 +55,25 @@ Future<void> openTab(WidgetTester tester, IconData icon) async {
   await tester.pumpAndSettle();
 }
 
-/// Taps a shipment tab by its label. Scoped to the TabBar: the same word is on
+/// The four status tabs, in the order a shipment moves through them.
+const statusTabs = ['Ordered', 'Packing', 'Packed', 'Audited'];
+
+/// Taps a status tab by its label. Scoped to the TabBar: the same word is on
 /// the status chip of every card in that tab.
 Future<void> openQueue(WidgetTester tester, String label) async {
-  // Every warehouse stage sits on the Work board now (laid out like YeaksaBoy);
-  // `label` is the stage whose section the caller wants.
   await tester.tap(
-    find.descendant(of: find.byType(TabBar), matching: find.text('Work')),
+    find.descendant(of: find.byType(TabBar), matching: find.text(label)),
   );
-  await tester.pumpAndSettle();
-  final section = find.text(label);
-  if (section.evaluate().isNotEmpty) await tester.ensureVisible(section.first);
   await tester.pumpAndSettle();
 }
 
+/// Opens a shipment, visiting the status tabs until it turns up: each status
+/// has a tab of its own, and only the first is showing on sign-in.
 Future<void> openShipment(WidgetTester tester, String code) async {
+  for (final label in statusTabs) {
+    if (find.text(code).evaluate().isNotEmpty) break;
+    await openQueue(tester, label);
+  }
   await tester.tap(find.text(code));
   await tester.pumpAndSettle();
 }
@@ -127,29 +132,29 @@ void main() {
     expect(find.text('Enter your password.'), findsOneWidget);
   });
 
-  testWidgets('signing in lands on the Work board, laid out like YeaksaBoy',
+  testWidgets('signing in lands on the Ordered tab, one tab per status',
       (tester) async {
     await signIn(tester);
 
-    for (final tab in ['Work', 'History']) {
+    for (final tab in statusTabs) {
       expect(
         find.descendant(of: find.byType(TabBar), matching: find.text(tab)),
         findsOneWidget,
       );
     }
-    expect(find.text('Ordered'), findsWidgets); // the stage heading
     expect(find.text('YK-1'), findsOneWidget);
     expect(find.text('Not accepted'), findsOneWidget);
     expect(find.widgetWithText(ElevatedButton, 'Accept to pack'), findsWidgets);
   });
 
-  testWidgets('empty stages are left out; nothing at all says so',
+  testWidgets('a status with nothing in it says so; the others still show',
       (tester) async {
     await signIn(tester, orders: [
       buildOrder(id: '1', stage: FulfilmentStage.audited),
     ]);
-    expect(find.text('Audited'), findsWidgets);
-    expect(find.text('Ordered'), findsNothing);
+    expect(find.text('Nothing to do'), findsOneWidget); // Ordered is empty
+    await openQueue(tester, 'Audited');
+    expect(find.text('YK-1'), findsOneWidget);
     expect(find.text('Waiting for the rider'), findsOneWidget);
   });
 
@@ -158,11 +163,8 @@ void main() {
     expect(find.text('Nothing to do'), findsOneWidget);
   });
 
-  testWidgets('stages top to bottom, each card with its own next step',
+  testWidgets('each status has its own tab, each card its own next step',
       (tester) async {
-    tester.view.physicalSize = const Size(420 * 3, 4000 * 3);
-    tester.view.devicePixelRatio = 3;
-    addTearDown(tester.view.reset);
     await signIn(tester, orders: [
       buildOrder(id: '4', stage: FulfilmentStage.audited),
       buildOrder(id: '3', stage: FulfilmentStage.packed,
@@ -170,42 +172,49 @@ void main() {
       buildOrder(id: '2', stage: FulfilmentStage.ordered, preparedById: supervisor.id),
       buildOrder(id: '1', stage: FulfilmentStage.ordered),
     ]);
-    double y(String text) => tester.getTopLeft(find.text(text).first).dy;
-    expect(y('Ordered') < y('Packing'), isTrue);
-    expect(y('Packing') < y('Packed'), isTrue);
-    expect(y('Packed') < y('Audited'), isTrue);
-    // YK-2 has a packer, so it sits under Packing, not Ordered.
-    expect(y('Packing') < y('YK-2') && y('YK-2') < y('Packed'), isTrue);
-    expect(y('YK-1') < y('Packing'), isTrue);
-
     Finder buttonOn(String code, String label) => find.descendant(
         of: find.ancestor(of: find.text(code), matching: find.byType(OrderTaskCard)),
         matching: find.widgetWithText(ElevatedButton, label));
+
+    // Ordered: only what nobody has accepted.
+    expect(find.text('YK-1'), findsOneWidget);
+    expect(find.text('YK-2'), findsNothing);
     expect(buttonOn('YK-1', 'Accept to pack'), findsOneWidget);
+
+    // Packing: YK-2 has a packer, so it sits here, not under Ordered.
+    await openQueue(tester, 'Packing');
+    expect(find.text('YK-2'), findsOneWidget);
+    expect(find.text('YK-1'), findsNothing);
     expect(buttonOn('YK-2', 'Confirm packed'), findsOneWidget);
+
+    await openQueue(tester, 'Packed');
+    expect(find.text('YK-3'), findsOneWidget);
     expect(buttonOn('YK-3', 'Audit'), findsOneWidget); // signed in as a supervisor
+
+    await openQueue(tester, 'Audited');
     expect(find.descendant(
         of: find.ancestor(of: find.text('YK-4'), matching: find.byType(OrderTaskCard)),
         matching: find.text('Waiting for the rider')), findsOneWidget);
   });
 
-  testWidgets('accepting moves a card from Ordered to Packing', (tester) async {
+  testWidgets('accepting moves a card from the Ordered tab to Packing',
+      (tester) async {
     await signIn(tester, orders: [buildOrder(id: '1')]);
-    expect(find.text('Packing'), findsNothing);
     await tester.tap(find.widgetWithText(ElevatedButton, 'Accept to pack'));
     await tester.pump(const Duration(milliseconds: 600));
-    expect(find.text('Packing'), findsOneWidget);
-    // The card now sits under the Packing heading.
-    expect(tester.getTopLeft(find.text('Packing')).dy <
-        tester.getTopLeft(find.text('YK-1')).dy, isTrue);
+    await tester.pumpAndSettle();
+    expect(find.text('YK-1'), findsNothing);
+    await openQueue(tester, 'Packing');
+    expect(find.text('YK-1'), findsOneWidget);
   });
 
-  testWidgets('an audited order a rider has taken leaves the Work board',
+  testWidgets('an audited order a rider has taken leaves the Audited tab',
       (tester) async {
     await signIn(tester, orders: [
       buildOrder(id: '1', stage: FulfilmentStage.audited),
       buildOrder(id: '2', stage: FulfilmentStage.audited, riderName: 'Dara'),
     ]);
+    await openQueue(tester, 'Audited');
     expect(find.text('YK-1'), findsOneWidget);
     expect(find.text('YK-2'), findsNothing);
   });
@@ -224,8 +233,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     Finder card(String code) => find.descendant(
         of: find.byType(OrderTaskCard), matching: find.text(code));
+    expect(card('YK-11'), findsNothing); // Ordered no longer matches
+    await openQueue(tester, 'Packed');
     expect(card('YK-22'), findsOneWidget);
-    expect(card('YK-11'), findsNothing);
+    await openQueue(tester, 'Ordered');
 
     await tester.enterText(find.byKey(const ValueKey('order-search')), 'nobody');
     await tester.pump(const Duration(milliseconds: 500));
@@ -236,6 +247,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     await tester.pump(const Duration(milliseconds: 500));
     expect(card('YK-11'), findsOneWidget);
+    await openQueue(tester, 'Packed');
     expect(card('YK-22'), findsOneWidget);
   });
 
@@ -341,6 +353,7 @@ void main() {
       buildOrder(id: '1', preparedById: 'x9', preparedByName: 'Chan Vy'),
     ]);
 
+    await openQueue(tester, 'Packing');
     expect(find.text('Packer: Chan Vy'), findsOneWidget);
     await openShipment(tester, 'YK-1');
 
@@ -368,6 +381,31 @@ void main() {
         find.textContaining('audited — waiting for the rider'), findsOneWidget);
     await openQueue(tester, 'Audited');
     expect(find.text('YK-1'), findsOneWidget);
+  });
+
+  testWidgets('a packed shipment offers Attach document; other stages do not',
+      (tester) async {
+    await signIn(tester, orders: [
+      buildOrder(
+        id: '1',
+        stage: FulfilmentStage.packed,
+        lines: [buildLine(quantity: 1, packed: true)],
+      ),
+      buildOrder(id: '2'),
+    ]);
+    await openShipment(tester, 'YK-2');
+    expect(find.text('Attach document'), findsNothing);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    await openShipment(tester, 'YK-1');
+    expect(find.text('Attach document'), findsOneWidget);
+    // Backing out of the camera leaves the shipment as it was.
+    await tester.ensureVisible(find.text('Attach document'));
+    await tester.tap(find.text('Attach document'));
+    await tester.pumpAndSettle();
+    expect(find.text('Attach document'), findsOneWidget);
+    expect(find.text('Document attached.'), findsNothing);
   });
 
   testWidgets('an audited shipment waits for the rider', (tester) async {

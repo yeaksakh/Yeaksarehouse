@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'printer_settings_screen.dart';
+import '../services/camera.dart';
 import '../services/label_printer.dart';
 import '../services/pdf_stickers.dart';
 
@@ -38,6 +39,9 @@ class OrderDetailScreen extends StatefulWidget {
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
   /// True while the label PDF is being fetched and the print sheet opened.
   bool _printing = false;
+
+  /// True while a photographed document is going up to the server.
+  bool _attaching = false;
 
   /// The item a scan last landed on, so it can be flashed.
   String? _flashedLineId;
@@ -401,6 +405,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
           ],
           const SizedBox(height: 20),
+          if (order.stage == FulfilmentStage.packed) ...[
+            OutlinedButton.icon(
+              onPressed: _attaching ? null : () => _attachDocument(order),
+              icon: _attaching
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.photo_camera_outlined),
+              label:
+                  Text(_attaching ? l10n.uploadingDocument : l10n.attachDocument),
+            ),
+            const SizedBox(height: 10),
+          ],
           OutlinedButton.icon(
             onPressed: _printing ? null : () => _printLabels(order),
             icon: _printing
@@ -418,6 +437,24 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         ],
       ),
     );
+  }
+
+  /// Photographs a document and files it against this shipment.
+  Future<void> _attachDocument(Order order) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final tasks = context.read<TasksController>();
+    final path = await Camera.takeDocument();
+    if (path == null || !mounted) return;
+    setState(() => _attaching = true);
+    try {
+      final ok = await tasks.attachDocument(order.id, path);
+      messenger.showSnackBar(SnackBar(
+          content: Text(
+              ok ? l10n.documentAttached : (tasks.error ?? 'Could not upload.'))));
+    } finally {
+      if (mounted) setState(() => _attaching = false);
+    }
   }
 
   /// Ask where the stickers should go, then send them.

@@ -151,6 +151,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'The rider marks it picked up from the rider app.';
 
   @override
+  String get attachDocument => 'Attach document';
+
+  @override
+  String get uploadingDocument => 'Uploading…';
+
+  @override
+  String get documentAttached => 'Document attached.';
+
+  @override
   String get printBoxLabels => 'Print box labels';
 
   @override

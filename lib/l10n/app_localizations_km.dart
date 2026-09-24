@@ -150,6 +150,15 @@ class AppLocalizationsKm extends AppLocalizations {
   String get waitingForRiderBody => 'អ្នកដឹកនឹងចុចយកចេញពីកម្មវិធីរបស់ពួកគាត់។';
 
   @override
+  String get attachDocument => 'ភ្ជាប់ឯកសារ';
+
+  @override
+  String get uploadingDocument => 'កំពុងផ្ទុកឡើង…';
+
+  @override
+  String get documentAttached => 'បានភ្ជាប់ឯកសារហើយ។';
+
+  @override
   String get printBoxLabels => 'បោះពុម្ពស្លាកប្រអប់';
 
   @override

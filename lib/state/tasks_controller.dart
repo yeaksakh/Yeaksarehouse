@@ -159,6 +159,13 @@ class TasksController extends ChangeNotifier {
 
   Future<bool> release(String id) => _write(() => _api.release(id));
 
+  /// Files a photographed document against the shipment, then re-reads it so
+  /// the new picture shows in its photo strip.
+  Future<bool> attachDocument(String id, String filePath) => _write(() async {
+        await _api.uploadPhoto(id, filePath);
+        return _api.detail(id);
+      }, reloadQueues: false);
+
   Future<bool> setLinePacked(String id, String lineId,
           {required bool packed}) =>
       _write(() => _api.packLine(id, lineId, packed: packed),

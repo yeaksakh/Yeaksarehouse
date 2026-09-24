@@ -122,22 +122,29 @@ Future<void> openTab(WidgetTester tester, IconData icon) async {
   await tester.pumpAndSettle();
 }
 
+const statusTabs = ['Ordered', 'Packing', 'Packed', 'Audited'];
+
 Future<void> openQueue(WidgetTester tester, String label) async {
-  // Every warehouse stage sits on the Work board now (laid out like YeaksaBoy);
-  // `label` is the stage whose section the caller wants.
   await tester.tap(
-    find.descendant(of: find.byType(TabBar), matching: find.text('Work')),
+    find.descendant(of: find.byType(TabBar), matching: find.text(label)),
   );
   await tester.pumpAndSettle();
-  final section = find.text(label);
-  if (section.evaluate().isNotEmpty) await tester.ensureVisible(section.first);
+}
+
+/// Opens a shipment, visiting the status tabs until it turns up.
+Future<void> openShipment(WidgetTester tester, String code) async {
+  for (final label in statusTabs) {
+    if (find.text(code).evaluate().isNotEmpty) break;
+    await openQueue(tester, label);
+  }
+  await tester.tap(find.text(code));
   await tester.pumpAndSettle();
 }
 
 void main() {
   testWidgets('the shipment tabs fit a small phone', (tester) async {
     await pumpAt(tester, _smallPhone);
-    for (final tab in ['Work', 'History']) {
+    for (final tab in statusTabs) {
       expect(
         find.descendant(of: find.byType(TabBar), matching: find.text(tab)),
         findsOneWidget,
@@ -148,19 +155,16 @@ void main() {
   testWidgets('each tab lays out on a small phone', (tester) async {
     await pumpAt(tester, _smallPhone);
 
-    await tester.drag(find.byType(ListView).first, const Offset(0, -1500));
-    await tester.pumpAndSettle();
-    await tester.tap(
-        find.descendant(of: find.byType(TabBar), matching: find.text('History')));
-    await tester.pumpAndSettle();
+    for (final tab in statusTabs) {
+      await openQueue(tester, tab);
+    }
   });
 
   testWidgets('a shipment being packed lays out on a small phone',
       (tester) async {
     await pumpAt(tester, _smallPhone);
 
-    await tester.tap(find.text('YK-1'));
-    await tester.pumpAndSettle();
+    await openShipment(tester, 'YK-1');
 
     // Scroll the whole page, so anything below the fold is laid out too.
     await tester.drag(find.byType(ListView), const Offset(0, -900));
@@ -171,8 +175,7 @@ void main() {
       (tester) async {
     await pumpAt(tester, _smallPhone);
 
-    await tester.tap(find.text('YK-4'));
-    await tester.pumpAndSettle();
+    await openShipment(tester, 'YK-4');
     await tester.drag(find.byType(ListView), const Offset(0, -900));
     await tester.pumpAndSettle();
   });

@@ -209,6 +209,33 @@ class ShipmentsApi {
     return Order.fromApi(data);
   }
 
+  /// Files a photo against a shipment, as the website files a shipping document.
+  ///
+  /// Multipart `photo`; the server tags it with the status the shipment is about
+  /// to enter, which for a packed one is the audit.
+  Future<void> uploadPhoto(String id, String filePath) async {
+    final token = _token();
+    final request = http.MultipartRequest(
+        'POST', Uri.parse('${_baseUrl()}/api/shipments/$id/photo'))
+      ..headers['Accept'] = 'application/json'
+      ..files.add(await http.MultipartFile.fromPath('photo', filePath));
+    if (token != null) request.headers['Authorization'] = 'Bearer $token';
+
+    final http.Response response;
+    try {
+      // A picture takes longer than a JSON call on a phone plan.
+      response = await http.Response.fromStream(
+          await _http.send(request).timeout(timeout * 3));
+    } on TimeoutException {
+      throw ShipmentsException(
+          'The upload took too long. Check your internet and try again.');
+    } on Exception {
+      throw ShipmentsException(
+          'Could not reach the server. Check your internet and try again.');
+    }
+    _decode(response);
+  }
+
   /// Sends one request and returns the body of a `{"success": true}` answer.
   ///
   /// Failures arrive as `{"success": false, "message": ...}` with a real HTTP
@@ -243,6 +270,11 @@ class ShipmentsApi {
           'Could not reach the server. Check your internet and try again.');
     }
 
+    return _decode(response);
+  }
+
+  /// Reads a `{"success": true}` answer, or throws with the server's own words.
+  Map<String, dynamic> _decode(http.Response response) {
     Map<String, dynamic>? decoded;
     try {
       final value = jsonDecode(utf8.decode(response.bodyBytes));

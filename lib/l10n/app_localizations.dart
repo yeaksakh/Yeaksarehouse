@@ -314,6 +314,24 @@ abstract class AppLocalizations {
   /// **'The rider marks it picked up from the rider app.'**
   String get waitingForRiderBody;
 
+  /// No description provided for @attachDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach document'**
+  String get attachDocument;
+
+  /// No description provided for @uploadingDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get uploadingDocument;
+
+  /// No description provided for @documentAttached.
+  ///
+  /// In en, this message translates to:
+  /// **'Document attached.'**
+  String get documentAttached;
+
   /// No description provided for @printBoxLabels.
   ///
   /// In en, this message translates to:
